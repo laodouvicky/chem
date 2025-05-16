@@ -5,380 +5,508 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>化學奇境：互動遊戲樂園</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --cp-bg-dark: #0A0A1A;
+            --cp-bg-panel: #101028; 
+            --cp-bg-panel-translucent: rgba(16, 16, 40, 0.85); 
+            --cp-text-primary: #E0E0E0;
+            --cp-text-neon-cyan: #00FFFF;
+            --cp-text-neon-magenta: #FF00FF;
+            --cp-text-neon-lime: #7FFF00;
+            --cp-accent-cyan: #00FFFF;
+            --cp-accent-magenta: #FF00FF;
+            --cp-accent-blue: #4D4DFF;
+            --cp-accent-green: #39FF14; 
+            --cp-border-neon: rgba(0, 255, 255, 0.7);
+            --cp-font-primary: 'Noto Sans TC', 'Inter', sans-serif;
+            --cp-font-display: 'Orbitron', 'Noto Sans TC', sans-serif;
+        }
+
         body {
-            font-family: 'Noto Sans TC', 'Inter', sans-serif;
+            font-family: var(--cp-font-primary); margin: 0;
+            background-color: var(--cp-bg-dark); color: var(--cp-text-primary);
         }
 
+        #homepage {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 25%, #0f0c29 75%, #0a043c 100%);
+            color: var(--cp-text-primary); padding: 20px; text-align: center; position: relative; overflow: hidden;
+        }
+        #homepage::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+            background: repeating-linear-gradient(transparent, transparent 2px, rgba(0, 255, 255, 0.03) 3px, rgba(0, 255, 255, 0.03) 4px);
+            animation: scanlines 20s linear infinite;
+        }
+        @keyframes scanlines { 0% { background-position: 0 0; } 100% { background-position: 0 100px; } }
+
+        .homepage-title { /* Reduced glow effect */
+            font-family: var(--cp-font-display); font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 700;
+            color: var(--cp-text-neon-cyan);
+            text-shadow: 0 0 8px var(--cp-text-neon-cyan), 0 0 15px var(--cp-text-neon-cyan), 0 0 25px var(--cp-accent-magenta); /* Adjusted glow */
+            margin-bottom: 1rem; letter-spacing: 2px; z-index: 2;
+        }
+        .homepage-subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem); color: var(--cp-text-primary); margin-bottom: 2.5rem;
+            max-width: 600px; line-height: 1.6; text-shadow: 0 0 3px var(--cp-accent-magenta); z-index: 2;
+        }
+        .enter-button {
+            font-family: var(--cp-font-display);
+            background: linear-gradient(45deg, var(--cp-accent-magenta), var(--cp-accent-cyan));
+            color: var(--cp-bg-dark); padding: 1rem 2.5rem; font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-weight: bold; border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 0 15px var(--cp-accent-cyan), 0 0 25px var(--cp-accent-magenta), inset 0 0 10px rgba(255,255,255,0.3);
+            text-transform: uppercase; letter-spacing: 1px; z-index: 2;
+        }
+        .enter-button:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 0 25px var(--cp-accent-cyan), 0 0 40px var(--cp-accent-magenta), 0 0 60px var(--cp-accent-magenta), inset 0 0 15px rgba(255,255,255,0.5);
+        }
+        .enter-button:active { transform: scale(0.98) translateY(0px); }
+
+        #main-app-area {
+            display: none; flex-direction: column; min-height: 100vh;
+            background-color: var(--cp-bg-dark); 
+        }
+        #main-app-area header {
+            background-color: var(--cp-bg-panel); 
+            color: var(--cp-text-neon-cyan);
+            padding: 1rem; box-shadow: 0 2px 15px rgba(0, 255, 255, 0.3);
+            border-bottom: 1px solid var(--cp-border-neon);
+        }
+        #main-app-area header h1 {
+            font-family: var(--cp-font-display);
+            text-shadow: 0 0 5px var(--cp-text-neon-cyan);
+        }
+
+        #main-app-area nav {
+            background-color: var(--cp-bg-panel); padding: 0.75rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid var(--cp-border-neon);
+        }
         .nav-button {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            transition: background-color 0.3s, color 0.3s;
-            cursor: pointer;
-            background-color: #4A5568; /* bg-slate-600 */
-            color: white;
+            font-family: var(--cp-font-display); padding: 0.6rem 1.2rem; border-radius: 4px; font-weight: 500;
+            transition: all 0.3s ease; cursor: pointer;
+            background-color: transparent; color: var(--cp-text-neon-cyan);
+            border: 1px solid var(--cp-text-neon-cyan); text-shadow: 0 0 3px var(--cp-text-neon-cyan);
         }
-
         .nav-button:hover {
-            background-color: #2D3748; /* bg-slate-700 */
+            background-color: var(--cp-accent-cyan); color: var(--cp-bg-dark);
+            box-shadow: 0 0 10px var(--cp-accent-cyan), 0 0 15px var(--cp-accent-cyan); text-shadow: none;
         }
-
         .active-nav-button {
-            background-color: #3B82F6; /* bg-blue-500 */
-            color: white;
+            background-color: var(--cp-accent-magenta); color: var(--cp-bg-dark);
+            border-color: var(--cp-accent-magenta);
+            box-shadow: 0 0 10px var(--cp-accent-magenta), 0 0 15px var(--cp-accent-magenta); text-shadow: none;
         }
-        .active-nav-button:hover {
-            background-color: #2563EB; /* bg-blue-600 */
-        }
+        .active-nav-button:hover { background-color: var(--cp-accent-magenta); opacity: 0.9; }
 
         .game-container {
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-top: 1rem;
+            background-color: var(--cp-bg-panel-translucent); backdrop-filter: blur(5px); 
+            padding: 1rem; border-radius: 0.5rem;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0,0,0,0.3);
+            margin: 1rem; border: 1px solid var(--cp-border-neon); color: var(--cp-text-primary);
+        }
+        .game-container h1, .game-container h2 { 
+            font-family: var(--cp-font-display); color: var(--cp-text-neon-cyan);
+            text-shadow: 0 0 4px var(--cp-text-neon-cyan);
+        }
+        .game-button {
+            font-family: var(--cp-font-display); padding: 0.5rem 1rem; border-radius: 4px;
+            transition: all 0.3s ease; cursor: pointer;
+            border: 1px solid; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .game-button-green {
+            background-color: transparent; color: var(--cp-accent-green); border-color: var(--cp-accent-green);
+            text-shadow: 0 0 3px var(--cp-accent-green);
+        }
+        .game-button-green:hover {
+            background-color: var(--cp-accent-green); color: var(--cp-bg-dark); text-shadow: none;
+            box-shadow: 0 0 8px var(--cp-accent-green);
+        }
+        .game-button-blue {
+            background-color: transparent; color: var(--cp-accent-blue); border-color: var(--cp-accent-blue);
+            text-shadow: 0 0 3px var(--cp-accent-blue);
+        }
+        .game-button-blue:hover {
+            background-color: var(--cp-accent-blue); color: var(--cp-bg-dark); text-shadow: none;
+            box-shadow: 0 0 8px var(--cp-accent-blue);
+        }
+         .game-button-red {
+            background-color: transparent; color: var(--cp-accent-magenta); border-color: var(--cp-accent-magenta);
+            text-shadow: 0 0 3px var(--cp-accent-magenta);
+        }
+        .game-button-red:hover {
+            background-color: var(--cp-accent-magenta); color: var(--cp-bg-dark); text-shadow: none;
+            box-shadow: 0 0 8px var(--cp-accent-magenta);
+        }
+        .cyber-input {
+            background-color: rgba(0,0,0,0.3); border: 1px solid var(--cp-border-neon);
+            color: var(--cp-text-neon-cyan); padding: 0.5rem 0.75rem; border-radius: 4px;
+        }
+        .cyber-input::placeholder { color: rgba(0, 255, 255, 0.5); }
+        .cyber-input:focus {
+            outline: none; box-shadow: 0 0 10px var(--cp-accent-cyan); border-color: var(--cp-accent-cyan);
         }
 
-        /* Game 1: 化學配對消消樂 Specific Styles */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        #main-app-area footer {
+            background-color: var(--cp-bg-panel); color: var(--cp-text-neon-cyan);
+            padding: 0.75rem; text-align: center; font-size: 0.8rem;
+            border-top: 1px solid var(--cp-border-neon); text-shadow: 0 0 2px var(--cp-text-neon-cyan);
         }
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0); }
+        @media (min-width: 768px) { .game-container { padding: 1.5rem; margin: 1.5rem; } }
+
+        /* Game 1: 化學配對消消樂 - Card Styles (No Flip) */
+        .score-popup { z-index: 1000; pointer-events: none; }
+        .card-containerG1 { 
+            width: clamp(70px, 20vw, 120px); /* Slightly larger for better content visibility */
+            height: clamp(70px, 20vw, 120px); /* Make them square-ish */
+            cursor: pointer;
+            display: flex; /* Added for centering content within container if needed */
+            align-items: center;
+            justify-content: center;
         }
-        @keyframes scoreFadeOut {
-            0% { opacity: 1; transform: translateY(0) scale(1.8); }
-            60% { opacity: 1; transform: translateY(-40px) scale(1.8); }
-            100% { opacity: 0; transform: translateY(-80px) scale(1.8); }
+        .cardG1 { /* This is the visible card itself now */
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--cp-accent-blue), var(--cp-accent-cyan)); /* Default card bg */
+            color: var(--cp-bg-dark);
+            border: 2px solid var(--cp-border-neon);
+            border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 5px;
+            font-size: clamp(0.6rem, 2.2vw, 0.9rem); /* Adjusted font size */
+            font-weight: 600;
+            transition: background-color 0.3s, opacity 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
+        .cardG1.selected { /* Style for selected card */
+            background: linear-gradient(135deg, var(--cp-accent-magenta), #ff55ff);
+            box-shadow: 0 0 10px var(--cp-accent-magenta);
         }
-        .score-popup {
-            position: fixed;
-            font-weight: bold;
-            font-size: 3rem; /* Adjusted for better visibility */
-            text-shadow: 0 0 8px rgba(0,0,0,0.8);
-            animation: scoreFadeOut 2.5s ease-out forwards;
-            z-index: 1000; /* Ensure it's above other elements */
-            pointer-events: none;
+        .cardG1.matched { /* Style for matched cards */
+            opacity: 0.5 !important; 
+            border: 3px solid var(--cp-accent-green) !important; 
+            box-shadow: 0 0 12px var(--cp-accent-green) !important; 
+            pointer-events: none; /* Make unclickable after match */
+            background: var(--cp-accent-green) !important; /* Change background to green on match */
+            color: var(--cp-bg-dark) !important;
         }
-        .cell-container { /* Game 1 */
-            position: relative;
-            width: clamp(60px, 15vw, 96px); /* Responsive cell size */
-            height: clamp(60px, 15vh, 96px);
-            transition: all 0.3s ease;
-        }
-        .cell-removing { /* Game 1 */
-            animation: fadeOut 0.5s ease-out forwards;
-        }
-        .shake { /* Game 1 */
-            animation: shake 0.5s ease-in-out;
-        }
+        .shake { animation: shake 0.5s ease-in-out; }
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-5px); }
+            0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); }
             40%, 80% { transform: translateX(5px); }
         }
-        .celebration { /* Game 1 */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: rgba(0,0,0,0.7);
-            z-index: 1000;
+        #gridG1 { /* Ensure grid displays correctly */
+             display: grid;
+             grid-template-columns: repeat(4, 1fr); /* Explicitly 4 columns */
+             gap: 0.5rem; /* Tailwind's gap-2 */
         }
-        .celebration-message { /* Game 1 */
-            font-size: clamp(1.5rem, 5vw, 3rem); /* Responsive font size */
-            font-weight: bold;
-            color: gold;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-            margin-bottom: 2rem;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        
-        /* Game 2: 原子半徑大小變化 Specific Styles */
-        #game2-container canvas {
-            border: 1px solid #D1D5DB; /* Tailwind gray-300 */
-            background: #F9FAFB; /* Tailwind gray-50 */
-            margin: 10px auto; /* Center canvas */
-            display: block;
-            max-width: 100%;
-            height: auto;
-        }
-        #game2-container .controls button, #game2-container .param-controls select {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            border: 1px solid #D1D5DB;
-            background-color: white;
-            transition: background-color 0.2s;
-        }
-        #game2-container .controls button:hover, #game2-container .param-controls select:hover {
-            background-color: #F3F4F6; /* gray-100 */
-        }
-        #game2-container .controls button.active-mode {
-            background-color: #3B82F6; /* blue-500 */
-            color: white;
-            border-color: #3B82F6;
-        }
-        #game2-container .explanation, #game2-container .reason-box {
-            max-width: 600px; /* Match original width */
-            margin: 10px auto; /* Center the boxes */
-            padding: 1rem;
-            border-radius: 0.375rem;
-        }
-        #game2-container .explanation {
-            background-color: #E5E7EB; /* gray-200 */
-        }
-        #game2-container .reason-box {
-            background-color: #DBEAFE; /* blue-100 */
-            border-left: 4px solid #3B82F6; /* blue-500 */
-            display: none; /* Initially hidden */
-        }
-        #game2-container .reason-box.period-reason { /* For period specific styling if needed */
-            background-color: #D1FAE5; /* green-100 */
-            border-left-color: #10B981; /* green-500 */
+        @media (min-width: 768px) { /* md breakpoint */
+            #gridG1 { gap: 1rem; } /* Tailwind's gap-4 */
         }
 
-        /* Game 3: 元素週期表配對 Specific Styles - UPDATED */
+
+        #leaderboardG1 {
+            background-color: rgba(0,0,0,0.3); border: 1px solid var(--cp-border-neon);
+            color: var(--cp-text-primary);
+        }
+        #leaderboardG1 h2 { color: var(--cp-text-neon-lime); }
+        #leaderboardG1 li { color: var(--cp-text-primary); }
+        #nameInputModalG1 .modal-content-areaG1 { 
+            background-color: var(--cp-bg-panel-translucent);
+            border: 1px solid var(--cp-border-neon); color: var(--cp-text-primary);
+        }
+        #nameInputModalG1 h2 { color: var(--cp-text-neon-cyan); }
+        #scoreG1, #messageG1 { color: var(--cp-text-neon-lime); }
+
+
+        /* Game 2: 原子半徑大小變化 Specific Styles */
+        /* ... (Game 2 CSS remains the same) ... */
+        #game2-container canvas { border-color: var(--cp-border-neon); background-color: #080812; }
+        #game2-container .controls button, #game2-container .param-controls select {
+            font-family: var(--cp-font-display); padding: 0.5rem 1rem; border-radius: 4px;
+            transition: all 0.3s ease; cursor: pointer; border: 1px solid;
+            background-color: transparent; color: var(--cp-text-neon-cyan); border-color: var(--cp-text-neon-cyan);
+        }
+        #game2-container .controls button:hover, #game2-container .param-controls select:hover {
+            background-color: var(--cp-text-neon-cyan); color: var(--cp-bg-dark);
+        }
+        #game2-container .controls button.active-mode {
+            background-color: var(--cp-accent-magenta); color: var(--cp-bg-dark); border-color: var(--cp-accent-magenta);
+        }
+        #game2-container .param-controls { background-color: transparent; border: 1px solid var(--cp-border-neon); padding: 1rem; }
+        #game2-container .param-controls label { color: var(--cp-text-neon-lime); }
+        #game2-container .explanation, #game2-container .reason-box {
+            background-color: rgba(0,0,0,0.3); border: 1px solid var(--cp-border-neon);
+            padding: 1rem; color: var(--cp-text-primary);
+        }
+        #game2-container .reason-box { border-left-width: 4px; }
+        #game2-container .reason-box.period-reason { border-left-color: var(--cp-accent-green); }
+        #infoG2 { color: var(--cp-text-neon-lime); }
+
+
+        /* Game 3: 元素週期表配對 Specific Styles */
+        /* ... (Game 3 CSS remains the same) ... */
         #periodic-table-game-grid {
-            display: grid;
-            grid-template-columns: repeat(18, minmax(35px, 1fr)); /* Cells at least 35px wide */
-            gap: 4px;
-            max-width: 900px; /* Max width of the entire table */
-            width: 100%; /* Make it take full available width up to max-width */
-            margin: 20px auto;
-            padding: 5px; /* Reduced padding slightly */
-            background-color: #e0e0e0; 
-            border-radius: 8px;
+            display: grid; grid-template-columns: repeat(18, minmax(18px, 1fr)); 
+            gap: 2px; max-width: 900px; width: 100%; margin: 10px auto; padding: 3px; 
+            background-color: rgba(0,0,0,0.2); 
+            border: 1px solid var(--cp-border-neon); border-radius: 6px; 
         }
         .pt-cell {
-            aspect-ratio: 1 / 1; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: clamp(0.6rem, 1.8vw, 0.9rem); /* Base font for cell, adjusted */
-            cursor: default;
-            transition: background-color 0.3s;
-            padding: 2px; /* Added small padding inside cell */
-            position: relative; /* For absolute positioning of atomic number */
-            overflow: hidden; /* Prevent content spillover */
+            aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background-color: var(--cp-bg-panel); 
+            border: 1px solid var(--cp-accent-blue); border-radius: 3px; 
+            font-size: clamp(0.4rem, 1.8vw, 0.65rem); 
+            cursor: default; transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            padding: 1px; position: relative; overflow: hidden; line-height: 1.1;
+            color: var(--cp-text-primary);
         }
         .pt-cell.empty-interactive {
-            background-color: #a7f3d0; 
-            cursor: pointer;
+            background-color: rgba(0, 255, 255, 0.15); border-color: var(--cp-accent-cyan);
         }
-        .pt-cell.empty-interactive:hover {
-            background-color: #6ee7b7;
-        }
-        .pt-cell.filled {
-            /* background-color will be set by JS using getColorForGroup */
-            cursor: default;
-        }
+        .pt-cell.empty-interactive:hover { background-color: rgba(0, 255, 255, 0.3); }
         .pt-cell .atomic-number {
-            font-size: clamp(0.55rem, 2vw, 0.75rem); /* Adjusted */
-            position: absolute;
-            top: 2px;
-            left: 3px;
-            color: #555; /* Slightly dimmer color */
+            font-size: clamp(0.35rem, 1.2vw, 0.55rem); position: absolute; top: 1px; left: 2px;
+            color: var(--cp-text-neon-cyan); opacity: 0.7;
         }
         .pt-cell .symbol {
-            font-size: clamp(0.9rem, 4vw, 1.6rem); /* Adjusted significantly for better visibility */
-            font-weight: bold;
-            line-height: 1; /* Compact line height */
+            font-size: clamp(0.55rem, 3vw, 1.2rem); font-weight: 700; line-height: 1; 
+            color: var(--cp-text-neon-lime); 
         }
         .pt-cell .name {
-            font-size: clamp(0.5rem, 1.8vw, 0.75rem); /* Adjusted */
-            margin-top: 2px; /* Space below symbol */
-            text-align: center;
-            line-height: 1.1; /* Slightly more space for name lines */
+            font-size: clamp(0.3rem, 1.2vw, 0.5rem); margin-top: 1px; text-align: center; line-height: 1;
+            display: none; color: var(--cp-text-primary);
         }
-        #game3-container .game-board-flash-red { /* Main game area flash */
-            animation: flashRedBackground 0.5s ease-in-out;
+        @media (min-width: 360px) { 
+             .pt-cell { font-size: clamp(0.4rem, 1.8vw, 0.7rem); }
+             .pt-cell .symbol { font-size: clamp(0.6rem, 3.2vw, 1.25rem); }
+             .pt-cell .name { font-size: clamp(0.35rem, 1.3vw, 0.55rem); }
         }
-        @keyframes flashRedBackground { /* Changed to target background of a larger container */
-            0%, 100% { background-color: transparent; } /* Assuming parent is transparent or has its own bg */
-            50% { background-color: #FECACA; } /* red-200 */
+        @media (min-width: 480px) { 
+            .pt-cell .name { display: block; } 
+            #periodic-table-game-grid { gap: 3px; grid-template-columns: repeat(18, minmax(22px, 1fr));}
+            .pt-cell .symbol { font-size: clamp(0.7rem, 3.5vw, 1.4rem); }
+            .pt-cell .name { font-size: clamp(0.4rem, 1.5vw, 0.6rem); }
         }
+        @media (min-width: 768px) { 
+            #periodic-table-game-grid { grid-template-columns: repeat(18, minmax(35px, 1fr)); gap: 4px; }
+            .pt-cell { padding: 2px; }
+            .pt-cell .atomic-number { font-size: clamp(0.55rem, 2vw, 0.75rem); }
+            .pt-cell .symbol { font-size: clamp(0.9rem, 4vw, 1.6rem); }
+            .pt-cell .name { font-size: clamp(0.5rem, 1.8vw, 0.75rem); }
+        }
+        #current-element-display { color: var(--cp-text-neon-magenta); font-weight: bold; }
         #element-fact-window {
-            min-height: 50px; 
+            background-color: rgba(0,0,0,0.3); border: 1px solid var(--cp-border-neon);
+            color: var(--cp-text-primary);
+        }
+        #element-fact-window h3 { color: var(--cp-text-neon-lime); }
+        #game3-message.text-green-600 { color: var(--cp-accent-green) !important; }
+        #game3-message.text-red-600 { color: var(--cp-accent-magenta) !important; }
+        #game3-win-message {
+            background-color: var(--cp-accent-green); color: var(--cp-bg-dark);
+            border: 2px solid var(--cp-accent-green); box-shadow: 0 0 15px var(--cp-accent-green);
+        }
+        #game3-win-message h2 { color: var(--cp-bg-dark); text-shadow: none; }
+        #restart-game3-button { 
+            background-color: var(--cp-bg-dark); color: var(--cp-accent-green);
+            border: 1px solid var(--cp-accent-green);
+        }
+        #restart-game3-button:hover { background-color: #002b00; }
+        #game3-container .game-content-area.game-board-flash-red { 
+            animation: flashRedBackgroundCyber 0.5s ease-in-out;
+        }
+        @keyframes flashRedBackgroundCyber { 
+            0%, 100% { background-color: transparent; } 
+            50% { background-color: rgba(255, 0, 0, 0.3); box-shadow: 0 0 15px red; } 
         }
 
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col">
-    <header class="bg-sky-700 text-white p-4 shadow-lg">
-        <h1 class="text-2xl md:text-3xl font-bold text-center">化學奇境：互動遊戲樂園</h1>
-    </header>
+<body>
 
-    <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4 p-3 bg-sky-600 shadow-md">
-        <button id="nav-game1" class="nav-button active-nav-button">化學配對消消樂</button>
-        <button id="nav-game2" class="nav-button">原子半徑大小變化</button>
-        <button id="nav-game3" class="nav-button">元素週期表配對</button>
-    </nav>
+    <div id="homepage">
+        <h1 class="homepage-title">化學奇境</h1>
+        <p class="homepage-subtitle">探索元素的奧秘，挑戰化學的樂趣。準備好進入互動遊戲樂園了嗎？</p>
+        <button id="enter-app-button" class="enter-button">進入樂園</button>
+    </div>
 
-    <main class="flex-grow p-2 md:p-6">
-        <div id="game1-container" class="game-container">
-            <div class="flex flex-col items-center justify-center p-1">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">化學配對消消樂</h1>
-                <div id="startScreenG1" class="fade-in text-center">
-                    <button id="startButtonG1" class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300 text-lg">
-                        開始遊戲
-                    </button>
-                </div>
-                <div class="flex flex-col lg:flex-row gap-4 md:gap-8 w-full max-w-4xl">
-                    <div id="gridG1" class="grid grid-cols-4 gap-2 md:gap-4 mx-auto" style="display: none;"></div>
-                    <div id="leaderboardG1" class="bg-white p-4 md:p-6 rounded-lg shadow-md w-full lg:w-80 order-first lg:order-last" style="display: none;">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">排行榜</h2>
-                        <ul id="leaderboardListG1" class="space-y-2"></ul>
-                        <button id="clearLeaderboardG1" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition duration-300 mt-4 w-full">
-                            清除排名
+    <div id="main-app-area">
+        <header>
+            <h1 class="text-2xl md:text-3xl font-bold text-center">化學奇境：互動遊戲樂園</h1>
+        </header>
+
+        <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4">
+            <button id="nav-game1" class="nav-button active-nav-button">化學配對消消樂</button>
+            <button id="nav-game2" class="nav-button">原子半徑大小變化</button>
+            <button id="nav-game3" class="nav-button">元素週期表配對</button>
+        </nav>
+
+        <main class="flex-grow">
+            <div id="game1-container" class="game-container">
+                <div class="flex flex-col items-center justify-center p-1">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-6 text-center">化學配對消消樂</h1>
+                    <div id="startScreenG1" class="fade-in text-center">
+                        <button id="startButtonG1" class="game-button game-button-green px-6 py-3 text-lg">
+                            開始遊戲
                         </button>
                     </div>
-                </div>
-                <p id="messageG1" class="text-lg md:text-xl font-semibold text-gray-700 mt-6 text-center"></p>
-                <div id="restartScreenG1" class="fade-in mt-4 text-center" style="display: none;">
-                    <button id="restartButtonG1" class="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition duration-300 text-lg">
-                        重新開始
-                    </button>
-                </div>
-                <p class="text-xl md:text-2xl font-bold text-gray-800 mt-6">分數: <span id="scoreG1">0</span></p>
-                <div id="nameInputModalG1" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="display: none; z-index: 999;">
-                    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">輸入你的名稱</h2>
-                        <input type="text" id="playerNameG1" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4" placeholder="你的名稱">
-                        <button id="confirmNameG1" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition duration-300 w-full">
-                            確認
+                    <div class="my-4"> 
+                        <button id="restartInGameButtonG1" class="game-button game-button-blue px-4 py-2 text-sm" style="display: none;">
+                            重新開始本局
                         </button>
                     </div>
-                </div>
-                <div id="celebrationG1" class="celebration" style="display: none;">
-                    <div class="celebration-message">恭喜你完成遊戲！</div>
-                    <div class="celebration-message" style="font-size: clamp(1rem, 4vw, 2rem);">你的分數: <span id="finalScoreG1">0</span></div>
+                    <div class="flex flex-col lg:flex-row gap-4 md:gap-8 w-full max-w-4xl">
+                        <div id="gridG1" class="mx-auto" style="display: none;">
+                            </div>
+                        <div id="leaderboardG1" class="p-4 md:p-6 rounded-lg w-full lg:w-80 order-first lg:order-last" style="display: none;">
+                            <h2 class="text-xl font-bold mb-4">排行榜</h2>
+                            <ul id="leaderboardListG1" class="space-y-2"></ul>
+                            <button id="clearLeaderboardG1" class="game-button game-button-red px-4 py-2 mt-4 w-full">
+                                清除排名
+                            </button>
+                        </div>
+                    </div>
+                    <p id="messageG1" class="text-lg md:text-xl font-semibold mt-6 text-center"></p>
+                    <div id="restartScreenG1" class="fade-in mt-4 text-center" style="display: none;">
+                        <button id="restartButtonG1" class="game-button game-button-blue px-6 py-3 text-lg">
+                            重新開始新一輪
+                        </button>
+                    </div>
+                    <p class="text-xl md:text-2xl font-bold mt-6">分數: <span id="scoreG1">0</span></p>
+                    <div id="nameInputModalG1" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4" style="display: none; z-index: 999;">
+                        <div class="modal-content-areaG1 p-6 rounded-lg shadow-xl w-full max-w-md">
+                            <h2 class="text-xl font-bold mb-4">輸入你的名稱</h2>
+                            <input type="text" id="playerNameG1" class="cyber-input w-full mb-4" placeholder="你的名稱">
+                            <button id="confirmNameG1" class="game-button game-button-green px-6 py-2 w-full">
+                                確認
+                            </button>
+                        </div>
+                    </div>
+                    <div id="celebrationG1" class="celebration" style="display: none;">
+                        <div class="celebration-message">恭喜你完成遊戲！</div>
+                        <div class="celebration-message" style="font-size: clamp(1rem, 4vw, 2rem);">你的分數: <span id="finalScoreG1">0</span></div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div id="game2-container" class="game-container" style="display: none;">
-            <div class="flex flex-col items-center p-1">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">原子半徑大小變化</h1>
-                <div class="controls flex flex-wrap justify-center gap-2 mb-4">
-                    <button onclick="toggleModeG2('group')" id="groupBtnG2" class="active-mode">主族變化模式</button>
-                    <button onclick="handleReasonG2('group')" id="groupReasonBtnG2">原因 (主族)</button>
-                    <button onclick="toggleModeG2('period')" id="periodBtnG2">週期變化模式</button>
-                    <button onclick="handleReasonG2('period')" id="periodReasonBtnG2">原因 (週期)</button>
+            <div id="game2-container" class="game-container" style="display: none;">
+                <div class="flex flex-col items-center p-1">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-6 text-center">原子半徑大小變化</h1>
+                    <div class="controls flex flex-wrap justify-center gap-2 mb-4">
+                        <button onclick="toggleModeG2('group')" id="groupBtnG2">主族變化模式</button>
+                        <button onclick="handleReasonG2('group')" id="groupReasonBtnG2">原因 (主族)</button>
+                        <button onclick="toggleModeG2('period')" id="periodBtnG2">週期變化模式</button>
+                        <button onclick="handleReasonG2('period')" id="periodReasonBtnG2">原因 (週期)</button>
                     </div>
-                
-                <div class="param-controls bg-gray-100 p-4 rounded-lg shadow mb-4 w-full max-w-lg text-center">
-                    <label class="block mb-2">電子層數 (n):
-                        <select id="layersG2" onchange="updateParamsG2()" class="ml-2 p-1 border rounded">
-                            <option value="1">1</option>
-                            <option value="2" selected>2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                        </select>
-                    </label>
                     
-                    <label class="block">最外層電子數:
-                        <select id="electronsG2" onchange="updateParamsG2()" class="ml-2 p-1 border rounded">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                        </select>
-                    </label>
+                    <div class="param-controls rounded-lg shadow mb-4 w-full max-w-lg text-center">
+                        <label class="block mb-2">電子層數 (n):
+                            <select id="layersG2" onchange="updateParamsG2()" class="ml-2 p-1 rounded cyber-input">
+                                <option value="1">1</option> <option value="2" selected>2</option> <option value="3">3</option>
+                                <option value="4">4</option> <option value="5">5</option>
+                            </select>
+                        </label>
+                        <label class="block">最外層電子數:
+                            <select id="electronsG2" onchange="updateParamsG2()" class="ml-2 p-1 rounded cyber-input">
+                                <option value="1">1</option> <option value="2">2</option> <option value="3">3</option>
+                                <option value="4">4</option> <option value="5">5</option> <option value="6">6</option>
+                                <option value="7">7</option> <option value="8">8</option>
+                            </select>
+                        </label>
+                    </div>
+                    <canvas id="atomCanvasG2" width="600" height="400"></canvas> 
+                    <div id="infoG2" class="explanation text-center"></div>
+                    <div id="reasonG2" class="reason-box"></div>
                 </div>
-            
-                <canvas id="atomCanvasG2" width="600" height="400"></canvas> <div id="infoG2" class="explanation text-center"></div>
-                <div id="reasonG2" class="reason-box"></div>
             </div>
-        </div>
 
-        <div id="game3-container" class="game-container" style="display: none;">
-             <div class="flex flex-col items-center p-1"> {/* This div will be flashed red on error */}
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">元素週期表配對</h1>
-                
-                <div class="mb-4 p-4 bg-indigo-100 rounded-lg shadow text-center w-full max-w-md">
-                    <p class="text-lg">目前要放置的元素：</p>
-                    <p id="current-element-display" class="text-2xl font-bold text-indigo-700">-</p>
-                </div>
-
-                <button id="dice-button" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out mb-6 text-lg">
-                    🎲 擲骰子取元素
-                </button>
-
-                <div id="periodic-table-game-grid">
+            <div id="game3-container" class="game-container" style="display: none;">
+                 <div class="flex flex-col items-center p-1 game-content-area">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-6 text-center">元素週期表配對</h1>
+                    
+                    <div class="mb-4 p-4 rounded-lg shadow text-center w-full max-w-md" style="background-color: rgba(77,77,255,0.2); border: 1px solid var(--cp-accent-blue);">
+                        <p class="text-lg" style="color: var(--cp-text-primary);">目前要放置的元素：</p>
+                        <p id="current-element-display" class="text-2xl font-bold">-</p>
                     </div>
 
-                <div id="element-fact-window" class="mt-6 p-4 bg-lime-100 rounded-lg shadow w-full max-w-2xl text-center">
-                    <h3 class="font-semibold text-lime-800 text-lg mb-1">元素小知識：</h3>
-                    <p id="fact-text" class="text-lime-700">-</p>
-                </div>
-                
-                <p id="game3-message" class="text-xl font-semibold text-red-600 mt-4"></p>
+                    <div class="flex space-x-4 mb-6">
+                        <button id="dice-buttonG3" class="game-button game-button-red px-6 py-3 text-lg">
+                            🎲 擲骰子取元素
+                        </button>
+                        <button id="restart-game-buttonG3" class="game-button game-button-blue px-6 py-3 text-lg">
+                            重新開始遊戲
+                        </button>
+                    </div>
 
-                <div id="game3-win-message" class="hidden mt-6 p-6 bg-green-500 text-white rounded-lg shadow-xl text-center">
-                    <h2 class="text-3xl font-bold mb-2">🎉 恭喜！ 🎉</h2>
-                    <p class="text-xl">您已成功完成元素週期表！</p>
-                    <button id="restart-game3-button" class="mt-4 bg-white text-green-600 font-bold py-2 px-4 rounded-lg hover:bg-green-100 transition">
-                        重新開始
-                    </button>
+
+                    <div id="periodic-table-game-grid">
+                        </div>
+
+                    <div id="element-fact-window" class="mt-6 p-4 rounded-lg shadow w-full max-w-2xl text-center">
+                        <h3 class="font-semibold text-lg mb-1">元素小知識：</h3>
+                        <p id="fact-text" class="text-base">-</p>
+                    </div>
+                    
+                    <p id="game3-message" class="text-xl font-semibold mt-4"></p>
+
+                    <div id="game3-win-message" class="hidden mt-6 p-6 rounded-lg shadow-xl text-center">
+                        <h2 class="text-3xl font-bold mb-2">🎉 恭喜！ 🎉</h2>
+                        <p class="text-xl">您已成功完成元素週期表！</p>
+                        <button id="play-again-game3-button" class="mt-4 font-bold py-2 px-4 rounded-lg transition game-button game-button-green">
+                            再玩一次
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <footer class="text-center p-4 text-slate-600 text-sm bg-slate-200">
-        © 2025 化學遊戲樂園
-    </footer>
+        <footer>
+            © 2025 化學遊戲樂園
+        </footer>
+    </div>
 
     <script>
-        // Main Navigation Logic
+        // Homepage and Main App Navigation
+        const homepage = document.getElementById('homepage');
+        const mainAppArea = document.getElementById('main-app-area');
+        const enterAppButton = document.getElementById('enter-app-button');
+
+        enterAppButton.addEventListener('click', () => {
+            homepage.style.display = 'none';
+            mainAppArea.style.display = 'flex'; 
+            showGame('game1'); 
+        });
+
         const navButtons = document.querySelectorAll('.nav-button');
         const gameContainers = document.querySelectorAll('.game-container');
 
         function showGame(gameId) {
-            gameContainers.forEach(container => {
-                container.style.display = 'none';
-            });
-            navButtons.forEach(button => {
-                button.classList.remove('active-nav-button');
-            });
-
+            gameContainers.forEach(container => { container.style.display = 'none'; });
+            navButtons.forEach(button => { button.classList.remove('active-nav-button'); });
             document.getElementById(gameId + '-container').style.display = 'block';
-            document.getElementById('nav-' + gameId).classList.add('active-nav-button');
+            const navButtonForGame = document.getElementById('nav-' + gameId);
+            if (navButtonForGame) { navButtonForGame.classList.add('active-nav-button'); }
             
-            // Special initialization if needed
+            if (gameId === 'game1') { 
+                const restartInGameBtnG1 = document.getElementById('restartInGameButtonG1');
+                if (restartInGameBtnG1 && gameActiveG1) restartInGameBtnG1.style.display = 'inline-block';
+                else if(restartInGameBtnG1) restartInGameBtnG1.style.display = 'none';
+            } else {
+                const restartInGameBtnG1 = document.getElementById('restartInGameButtonG1');
+                if (restartInGameBtnG1) restartInGameBtnG1.style.display = 'none';
+            }
+
             if (gameId === 'game2') {
-                 if (typeof initGame2 === "function") initGame2();
+                 if (typeof initGame2 === "function" && !game2Initialized) initGame2();
+                 else if (typeof drawAtomG2 === "function") drawAtomG2(); 
             } else if (gameId === 'game3') {
                 if (typeof initGame3 === "function" && !game3Initialized) initGame3();
             }
         }
-
         navButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const gameId = button.id.replace('nav-', '');
@@ -386,18 +514,15 @@
             });
         });
 
-        // Show Game 1 by default
-        showGame('game1');
-
         // --- Game 1: 化學配對消消樂 Script ---
-        const chemicalPairsG1 = [
+        const chemicalPairsG1 = [ 
             { name: '氯化鉀', formula: 'KCl' }, { name: '一氧化二氮', formula: 'N₂O' },
             { name: '氧化鐵', formula: 'Fe₂O₃' }, { name: '二氧化碳', formula: 'CO₂' },
             { name: '二氧化硅', formula: 'SiO₂' }, { name: '硝酸', formula: 'HNO₃' },
             { name: '碳酸', formula: 'H₂CO₃' }, { name: '硫酸', formula: 'H₂SO₄' },
             { name: '硫酸鉀', formula: 'K₂SO₄' }, { name: '碳酸鎂', formula: 'MgCO₃' },
             { name: '硝酸鈉', formula: 'NaNO₃' }, { name: '碳酸鈣', formula: 'CaCO₃' },
-            { name: '一氧化二氫', formula: 'H₂O' }, { name: '四氧化三鐵', formula: 'Fe₃O₄' },
+            { name: '水', formula: 'H₂O' }, { name: '四氧化三鐵', formula: 'Fe₃O₄' },
             { name: '五氧化二氮', formula: 'N₂O₅' }, { name: '七氧化二氯', formula: 'Cl₂O₇' },
             { name: '硫酸鈉', formula: 'Na₂SO₄' }, { name: '碳酸鋁', formula: 'Al₂(CO₃)₃' },
             { name: '氧氣', formula: 'O₂' }, { name: '氫氣', formula: 'H₂' }, { name: '氦氣', formula: 'He' },
@@ -424,45 +549,40 @@
             { name: '硝酸銅', formula: 'Cu(NO₃)₂' }
         ];
         const gridSizeG1 = 4;
-        let gridArrG1 = [];
-        let selectedCellsG1 = [];
-        let matchedCellsG1 = [];
-        let scoreG1 = 0;
-        let startTimeG1;
-        let timerG1;
-        let playerNameG1 = '';
+        let cardsG1 = [], selectedCardsG1 = [], matchedCardsCountG1 = 0; 
+        let scoreG1 = 0, startTimeG1, timerG1, playerNameG1 = '';
         let leaderboardG1 = JSON.parse(localStorage.getItem('leaderboardG1')) || [];
+        let gameActiveG1 = false;
 
         const startScreenG1 = document.getElementById('startScreenG1');
         const gridElementG1 = document.getElementById('gridG1');
         const leaderboardElementG1 = document.getElementById('leaderboardG1');
-        const restartScreenG1 = document.getElementById('restartScreenG1');
+        const restartScreenG1 = document.getElementById('restartScreenG1'); 
+        const restartInGameButtonG1 = document.getElementById('restartInGameButtonG1'); 
         const messageElementG1 = document.getElementById('messageG1');
         const scoreDisplayG1 = document.getElementById('scoreG1');
         const nameInputModalG1 = document.getElementById('nameInputModalG1');
         const celebrationElementG1 = document.getElementById('celebrationG1');
         const finalScoreDisplayG1 = document.getElementById('finalScoreG1');
 
-        function updateLeaderboardG1() {
+        function updateLeaderboardG1() { 
             const leaderboardList = document.getElementById('leaderboardListG1');
             leaderboardList.innerHTML = '';
             leaderboardG1.sort((a, b) => b.score - a.score);
             leaderboardG1.slice(0, 8).forEach((entry, index) => {
                 const li = document.createElement('li');
-                li.className = 'text-gray-700 text-sm md:text-lg';
+                li.className = 'text-sm md:text-base py-1';
                 li.textContent = `${index + 1}. ${entry.name}: ${entry.score} 分`;
                 leaderboardList.appendChild(li);
             });
         }
-
-        function getRandomPairsG1() {
+        function getRandomPairsG1() { 
             const shuffledPairs = [...chemicalPairsG1].sort(() => Math.random() - 0.5);
             const neededPairs = (gridSizeG1 * gridSizeG1) / 2;
             const selectedPairs = shuffledPairs.slice(0, Math.min(neededPairs, shuffledPairs.length));
             while (selectedPairs.length < neededPairs && chemicalPairsG1.length > 0) {
                 selectedPairs.push(chemicalPairsG1[Math.floor(Math.random() * chemicalPairsG1.length)]);
             }
-
             const allItems = [];
             selectedPairs.forEach(pair => {
                 allItems.push({ type: 'name', value: pair.name, pairId: pair.formula });
@@ -470,357 +590,258 @@
             });
             return allItems.sort(() => Math.random() - 0.5);
         }
+        
+        function createGridG1() { 
+            gridElementG1.innerHTML = ''; 
+            cardsG1 = []; 
+            matchedCardsCountG1 = 0; 
+            selectedCardsG1 = []; 
+            gameActiveG1 = true;
+            if(restartInGameButtonG1) restartInGameButtonG1.style.display = 'inline-block'; 
 
-        function createGridG1() {
-            gridElementG1.innerHTML = '';
-            gridArrG1 = [];
             const allItems = getRandomPairsG1();
             if (allItems.length < gridSizeG1 * gridSizeG1) {
-                console.error("Not enough items to fill the grid. Check chemicalPairsG1.");
-                while(allItems.length < gridSizeG1 * gridSizeG1) {
-                    allItems.push({ type: 'name', value: '錯誤', pairId: 'ERROR' });
-                }
+                console.error("Not enough items to fill the grid for Game 1.");
+                return;
             }
 
             for (let i = 0; i < gridSizeG1 * gridSizeG1; i++) {
-                const container = document.createElement('div');
-                container.className = 'cell-container';
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'card-containerG1';
                 
-                const cell = document.createElement('div');
-                cell.className = 'bg-green-500 text-white flex items-center justify-center text-center text-xs sm:text-sm md:text-base lg:text-xl font-semibold rounded-lg shadow-md cursor-pointer hover:bg-green-600 transition duration-300 w-full h-full p-1';
-                cell.textContent = allItems[i].value;
-                cell.dataset.pairId = allItems[i].pairId;
-                cell.dataset.type = allItems[i].type;
-                cell.dataset.index = i;
-                cell.addEventListener('click', () => selectCellG1(cell, i));
+                const card = document.createElement('div');
+                card.className = 'cardG1'; // Only one face now
+                card.dataset.index = i;
+                card.dataset.pairId = allItems[i].pairId;
+                card.dataset.type = allItems[i].type;
+                card.textContent = allItems[i].value; // Directly set content
+
+                cardContainer.appendChild(card);
+                gridElementG1.appendChild(cardContainer);
                 
-                container.appendChild(cell);
-                gridElementG1.appendChild(container);
-                gridArrG1.push({ cell, container, index: i });
+                cardsG1.push(card); 
+                card.addEventListener('click', () => handleCardClickG1(card));
             }
         }
-        
-        function showScorePopupG1(cell, points) {
-            const popup = document.createElement('div');
-            popup.className = 'score-popup';
-            popup.textContent = `+${points}`;
-            popup.style.color = 'gold';
-            const rect = cell.getBoundingClientRect();
-            popup.style.left = `${rect.left + rect.width / 2}px`;
-            popup.style.top = `${rect.top + rect.height / 2}px`;
-            popup.style.transform = 'translate(-50%, -50%)';
-            document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 2500);
-        }
 
-        function showPenaltyPopupG1() {
-            const popup = document.createElement('div');
-            popup.className = 'score-popup';
-            popup.textContent = '-20';
-            popup.style.color = 'red';
-            popup.style.left = '50%';
-            popup.style.top = '50%';
-            popup.style.transform = 'translate(-50%, -50%)';
-            document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 2500);
-        }
-
-        function removeCellG1(cell) {
-            const container = cell.parentElement;
-            container.classList.add('cell-removing');
-            setTimeout(() => { container.style.visibility = 'hidden'; }, 500);
-        }
-
-        function showCelebrationG1() {
-            finalScoreDisplayG1.textContent = scoreG1;
-            celebrationElementG1.style.display = 'flex';
-            setTimeout(() => {
-                celebrationElementG1.style.display = 'none';
-                restartScreenG1.style.display = 'block';
-            }, 3000);
-        }
-
-        function selectCellG1(cell, index) {
-            if (matchedCellsG1.includes(index) || selectedCellsG1.length === 2 || cell.parentElement.classList.contains('cell-removing')) return;
-            cell.classList.remove('bg-green-500', 'hover:bg-green-600');
-            cell.classList.add('bg-orange-500', 'hover:bg-orange-600');
-            selectedCellsG1.push({ cell, index, pairId: cell.dataset.pairId, type: cell.dataset.type });
-            if (selectedCellsG1.length === 2) checkMatchG1();
+        function handleCardClickG1(card) {
+            if (!gameActiveG1 || card.classList.contains('selected') || card.classList.contains('matched') || selectedCardsG1.length >= 2) {
+                return;
+            }
+            card.classList.add('selected');
+            selectedCardsG1.push(card);
+            if (selectedCardsG1.length === 2) {
+                checkMatchG1();
+            }
         }
 
         function checkMatchG1() {
-            const [cell1Obj, cell2Obj] = selectedCellsG1;
-            if (cell1Obj.type !== cell2Obj.type && cell1Obj.pairId === cell2Obj.pairId) {
+            const [card1, card2] = selectedCardsG1;
+            if (card1.dataset.type !== card2.dataset.type && card1.dataset.pairId === card2.dataset.pairId) {
                 const timeElapsed = (Date.now() - startTimeG1) / 1000;
                 const points = Math.max(100 - Math.floor(timeElapsed / 2), 10); 
-                scoreG1 += points;
+                scoreG1 += points; 
                 scoreDisplayG1.textContent = scoreG1;
-                showScorePopupG1(cell1Obj.cell, points);
-                removeCellG1(cell1Obj.cell);
-                removeCellG1(cell2Obj.cell);
-                matchedCellsG1.push(cell1Obj.index, cell2Obj.index);
-                if (matchedCellsG1.length === gridSizeG1 * gridSizeG1) {
-                    clearInterval(timerG1);
+                showScorePopupG1(card1, points); 
+
+                card1.classList.remove('selected');
+                card2.classList.remove('selected');
+                card1.classList.add('matched'); 
+                card2.classList.add('matched');
+                matchedCardsCountG1 += 2;
+
+                if (matchedCardsCountG1 === gridSizeG1 * gridSizeG1) {
+                    gameActiveG1 = false;
+                    clearInterval(timerG1); 
                     messageElementG1.textContent = '恭喜！你贏了！';
                     leaderboardG1.push({ name: playerNameG1, score: scoreG1 });
                     localStorage.setItem('leaderboardG1', JSON.stringify(leaderboardG1));
-                    updateLeaderboardG1();
+                    updateLeaderboardG1(); 
                     showCelebrationG1();
+                    if(restartInGameButtonG1) restartInGameButtonG1.style.display = 'none'; 
                 }
             } else {
-                scoreG1 = Math.max(0, scoreG1 - 20);
-                scoreDisplayG1.textContent = scoreG1;
+                scoreG1 = Math.max(0, scoreG1 - 20); 
+                scoreDisplayG1.textContent = scoreG1; 
                 showPenaltyPopupG1();
-                cell1Obj.cell.classList.add('shake');
-                cell2Obj.cell.classList.add('shake');
+                // Shake the card containers
+                card1.parentElement.classList.add('shake');
+                card2.parentElement.classList.add('shake');
                 setTimeout(() => {
-                    [cell1Obj, cell2Obj].forEach(obj => {
-                        obj.cell.classList.remove('bg-orange-500', 'hover:bg-orange-600', 'shake');
-                        obj.cell.classList.add('bg-green-500', 'hover:bg-green-600');
-                    });
-                }, 500);
+                    card1.classList.remove('selected');
+                    card2.classList.remove('selected');
+                    card1.parentElement.classList.remove('shake');
+                    card2.parentElement.classList.remove('shake');
+                }, 1000); 
             }
-            selectedCellsG1 = [];
+            selectedCardsG1 = [];
         }
-
-        function startGameG1() {
-            startScreenG1.style.display = 'none';
-            gridElementG1.style.display = 'grid';
-            leaderboardElementG1.style.display = 'block';
-            restartScreenG1.style.display = 'none';
-            messageElementG1.textContent = '';
-            celebrationElementG1.style.display = 'none';
-            scoreG1 = 0;
-            scoreDisplayG1.textContent = scoreG1;
-            matchedCellsG1 = [];
-            selectedCellsG1 = [];
-            createGridG1();
+        
+        function showScorePopupG1(card, points) { 
+            const popup = document.createElement('div');
+            popup.className = 'score-popup'; popup.textContent = `+${points}`; popup.style.color = 'gold';
+            const rect = card.getBoundingClientRect(); 
+            popup.style.left = `${rect.left + rect.width / 2}px`; popup.style.top = `${rect.top + rect.height / 2}px`;
+            popup.style.transform = 'translate(-50%, -50%)'; document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 2500);
+        }
+        function showPenaltyPopupG1() { 
+            const popup = document.createElement('div');
+            popup.className = 'score-popup'; popup.textContent = '-20'; popup.style.color = 'var(--cp-accent-magenta)';
+            popup.style.left = '50%'; popup.style.top = '50%'; popup.style.transform = 'translate(-50%, -50%)';
+            document.body.appendChild(popup); setTimeout(() => popup.remove(), 2500);
+        }
+        function showCelebrationG1() { 
+            finalScoreDisplayG1.textContent = scoreG1; celebrationElementG1.style.display = 'flex';
+            setTimeout(() => {
+                celebrationElementG1.style.display = 'none'; restartScreenG1.style.display = 'block'; 
+            }, 3000);
+        }
+        
+        function startGameG1() { 
+            startScreenG1.style.display = 'none'; gridElementG1.style.display = 'grid';
+            leaderboardElementG1.style.display = 'block'; restartScreenG1.style.display = 'none'; 
+            messageElementG1.textContent = ''; celebrationElementG1.style.display = 'none';
+            scoreG1 = 0; scoreDisplayG1.textContent = scoreG1; 
+            createGridG1(); 
             startTimeG1 = Date.now();
+            if (timerG1) clearInterval(timerG1); 
             timerG1 = setInterval(() => {
+                if (!gameActiveG1) { clearInterval(timerG1); return; }
                 const timeElapsed = (Date.now() - startTimeG1) / 1000;
                 messageElementG1.textContent = `時間: ${timeElapsed.toFixed(1)} 秒`;
             }, 100);
         }
-        
-        document.getElementById('startButtonG1').addEventListener('click', () => {
-            nameInputModalG1.style.display = 'flex';
-        });
+
+        function triggerRestartG1() { 
+            gameActiveG1 = false;
+            if (timerG1) clearInterval(timerG1);
+            messageElementG1.textContent = '準備重新開始...';
+            if(restartInGameButtonG1) restartInGameButtonG1.style.display = 'none'; 
+            nameInputModalG1.style.display = 'flex'; 
+        }
+
+        if(restartInGameButtonG1) restartInGameButtonG1.addEventListener('click', triggerRestartG1);
+        document.getElementById('startButtonG1').addEventListener('click', () => { nameInputModalG1.style.display = 'flex'; });
         document.getElementById('confirmNameG1').addEventListener('click', () => {
             playerNameG1 = document.getElementById('playerNameG1').value.trim();
-            if (playerNameG1) {
-                nameInputModalG1.style.display = 'none';
-                startGameG1();
-            } else {
+            if (playerNameG1) { nameInputModalG1.style.display = 'none'; startGameG1(); } 
+            else {
                 const nameInput = document.getElementById('playerNameG1');
-                nameInput.classList.add('border-red-500');
-                nameInput.placeholder = "請輸入有效名稱！";
-                setTimeout(() => {
-                    nameInput.classList.remove('border-red-500');
-                    nameInput.placeholder = "你的名稱";
-                }, 2000);
+                nameInput.classList.add('border-red-500'); nameInput.placeholder = "請輸入有效名稱！";
+                setTimeout(() => { nameInput.classList.remove('border-red-500'); nameInput.placeholder = "你的名稱"; }, 2000);
             }
         });
-        document.getElementById('restartButtonG1').addEventListener('click', () => nameInputModalG1.style.display = 'flex');
+        document.getElementById('restartButtonG1').addEventListener('click', () => nameInputModalG1.style.display = 'flex'); 
         document.getElementById('clearLeaderboardG1').addEventListener('click', () => {
-            if (confirm('確定要清除所有排名紀錄嗎？')) {
-                leaderboardG1 = [];
-                localStorage.removeItem('leaderboardG1'); 
-                updateLeaderboardG1();
-            }
+            if (confirm('確定要清除所有排名紀錄嗎？')) { leaderboardG1 = []; localStorage.removeItem('leaderboardG1'); updateLeaderboardG1(); }
         });
         updateLeaderboardG1();
 
-
         // --- Game 2: 原子半徑大小變化 Script ---
+        // (Game 2 JS remains the same)
         let canvasG2, ctxG2, currentModeG2, paramsG2, layerColorsG2, animationIdG2;
         let game2Initialized = false;
-
-        function initGame2() {
-            if (game2Initialized && canvasG2) { 
-                 if (animationIdG2) cancelAnimationFrame(animationIdG2);
-            }
-
+        function initGame2() { 
+            if (game2Initialized && canvasG2) { if (animationIdG2) cancelAnimationFrame(animationIdG2); }
             canvasG2 = document.getElementById('atomCanvasG2');
             if (!canvasG2) { console.error("Canvas for Game 2 not found"); return; }
-            ctxG2 = canvasG2.getContext('2d');
-            currentModeG2 = 'group'; 
-            
+            ctxG2 = canvasG2.getContext('2d'); currentModeG2 = 'group'; 
             paramsG2 = {
-                layers: 2,
-                electrons: 1,
-                physics: {
-                    baseAtomRadius: 120, 
-                    layerSpacingPM: 60,
-                    shrinkPerElectronPM: 5, 
-                    nucleusBaseFM: 5,
-                    nucleusLayerFM: 1.2,
-                    nucleusElectronFM: 0.3
-                },
-                display: {
-                    pmToPixel: 0.3, 
-                    fmToPixel: 0.1, 
-                    chargeFont: 'bold 18px Arial', 
-                    layerLabelFont: '12px Arial'
-                }
+                layers: 2, electrons: 1,
+                physics: { baseAtomRadius: 120, layerSpacingPM: 60, shrinkPerElectronPM: 5, nucleusBaseFM: 5, nucleusLayerFM: 1.2, nucleusElectronFM: 0.3 },
+                display: { pmToPixel: 0.3, fmToPixel: 0.1, chargeFont: 'bold 18px Arial', layerLabelFont: '12px Arial' }
             };
-
-            layerColorsG2 = ['#3B82F6', '#10B981', '#8B5CF6', '#EF4444', '#F59E0B'];
-
+            layerColorsG2 = ['#00FFFF', '#39FF14', '#FF00FF', '#FFFF00', '#FF7F00']; 
             document.getElementById('layersG2').value = paramsG2.layers;
             document.getElementById('electronsG2').value = paramsG2.electrons;
-
             document.getElementById('groupBtnG2').classList.add('active-mode');
             document.getElementById('periodBtnG2').classList.remove('active-mode');
             document.getElementById('reasonG2').style.display = 'none';
-
-            drawAtomG2();
-            game2Initialized = true;
+            drawAtomG2(); game2Initialized = true;
         }
-        
-        function calculateAtomRadiusPMG2() {
-            if (currentModeG2 === 'group') {
-                return paramsG2.physics.baseAtomRadius + (paramsG2.layers - 1) * paramsG2.physics.layerSpacingPM;
-            }
+        function calculateAtomRadiusPMG2() { 
+            if (currentModeG2 === 'group') { return paramsG2.physics.baseAtomRadius + (paramsG2.layers - 1) * paramsG2.physics.layerSpacingPM; }
             let baseRadiusForLayers = paramsG2.physics.baseAtomRadius + (paramsG2.layers - 1) * paramsG2.physics.layerSpacingPM;
             return baseRadiusForLayers - (paramsG2.electrons - 1) * paramsG2.physics.shrinkPerElectronPM * (paramsG2.layers); 
         }
-
-        function calculateNucleusRadiusFMG2() {
-            return paramsG2.physics.nucleusBaseFM + 
-                  (paramsG2.layers - 1) * paramsG2.physics.nucleusLayerFM + 
-                  (paramsG2.electrons - 1) * paramsG2.physics.nucleusElectronFM;
-        }
-
+        function calculateNucleusRadiusFMG2() { return paramsG2.physics.nucleusBaseFM + (paramsG2.layers - 1) * paramsG2.physics.nucleusLayerFM + (paramsG2.electrons - 1) * paramsG2.physics.nucleusElectronFM; }
         function toDisplayPMG2(pm) { return pm * paramsG2.display.pmToPixel; }
         function toDisplayFMG2(fm) { return fm * paramsG2.display.fmToPixel; }
-
-        function handleReasonG2(mode) {
+        function handleReasonG2(mode) { 
             const reasonDiv = document.getElementById('reasonG2');
             if (currentModeG2 === mode) {
                 let reasonText = '';
                 if (mode === 'group') {
-                    reasonText = `<b>同主族（最外層電子數不變，電子層數增加）：</b><br>
-                                1. <b>電子層數增加：</b>每增加一個電子層，原子體積顯著增大。<br>
-                                2. <b>遮蔽效應：</b>內層電子對外層電子的排斥部分抵消了核電荷的吸引力。<br>
-                                3. <b>主要因素：</b>電子層數的增加是主導因素，導致原子半徑增大。<br>
-                                因此，在同一主族中，從上到下，原子半徑依次增大。`;
+                    reasonText = `<b>同主族（最外層電子數不變，電子層數增加）：</b><br>1. <b>電子層數增加：</b>每增加一個電子層，原子體積顯著增大。<br>2. <b>遮蔽效應：</b>內層電子對外層電子的排斥部分抵消了核電荷的吸引力。<br>3. <b>主要因素：</b>電子層數的增加是主導因素，導致原子半徑增大。<br>因此，在同一主族中，從上到下，原子半徑依次增大。`;
                     reasonDiv.className = 'reason-box p-4 rounded-md'; 
                 } else { 
-                    reasonText = `<b>同週期（電子層數不變，核電荷數及最外層電子數增加）：</b><br>
-                                1. <b>核電荷數增加：</b>原子核中的質子數增加，對核外電子的吸引力增強。<br>
-                                2. <b>最外層電子數增加：</b>雖然電子間有排斥，但核電荷增加的吸引效應更強。<br>
-                                3. <b>主要因素：</b>核電荷的有效吸引力增加是主導因素，使電子雲向原子核收縮，導致原子半徑減小。<br>
-                                因此，在同一週期中，從左到右（除稀有氣體外），原子半徑依次減小。`;
+                    reasonText = `<b>同週期（電子層數不變，核電荷數及最外層電子數增加）：</b><br>1. <b>核電荷數增加：</b>原子核中的質子數增加，對核外電子的吸引力增強。<br>2. <b>最外層電子數增加：</b>雖然電子間有排斥，但核電荷增加的吸引效應更強。<br>3. <b>主要因素：</b>核電荷的有效吸引力增加是主導因素，使電子雲向原子核收縮，導致原子半徑減小。<br>因此，在同一週期中，從左到右（除稀有氣體外），原子半徑依次減小。`;
                     reasonDiv.className = 'reason-box period-reason p-4 rounded-md'; 
                 }
                 reasonDiv.innerHTML = reasonText;
                 reasonDiv.style.display = reasonDiv.style.display === 'block' ? 'none' : 'block'; 
-            } else {
-                 reasonDiv.style.display = 'none'; 
-            }
+            } else { reasonDiv.style.display = 'none'; }
         }
-
-        function toggleModeG2(mode) {
+        function toggleModeG2(mode) { 
             currentModeG2 = mode;
             document.getElementById('groupBtnG2').classList.toggle('active-mode', mode === 'group');
             document.getElementById('periodBtnG2').classList.toggle('active-mode', mode === 'period');
             document.getElementById('reasonG2').style.display = 'none'; 
-            
-            if (mode === 'group') { 
-                document.getElementById('electronsG2').value = 1; 
-            } else { 
-                 document.getElementById('layersG2').value = Math.min(parseInt(document.getElementById('layersG2').value), 3); 
-            }
+            if (mode === 'group') { document.getElementById('electronsG2').value = 1; } 
+            else { document.getElementById('layersG2').value = Math.min(parseInt(document.getElementById('layersG2').value), 3); }
             updateParamsG2(); 
         }
-        
-        function drawAtomG2() {
+        function drawAtomG2() { 
             if (!ctxG2) return;
-            const centerX = canvasG2.width / 2;
-            const centerY = canvasG2.height / 2;
+            const centerX = canvasG2.width / 2; const centerY = canvasG2.height / 2;
             ctxG2.clearRect(0, 0, canvasG2.width, canvasG2.height);
-            
-            const atomRadiusPM = calculateAtomRadiusPMG2();
-            const nucleusRadiusFM = calculateNucleusRadiusFMG2();
-            
+            const atomRadiusPM = calculateAtomRadiusPMG2(); const nucleusRadiusFM = calculateNucleusRadiusFMG2();
             const displayAtomRadius = Math.max(toDisplayPMG2(atomRadiusPM), 20); 
             const displayNucleus = Math.max(toDisplayFMG2(nucleusRadiusFM), 5); 
-
             const gradient = ctxG2.createRadialGradient(centerX, centerY, displayNucleus / 3, centerX, centerY, displayNucleus);
-            gradient.addColorStop(0, '#FCA5A5'); 
-            gradient.addColorStop(1, '#DC2626'); 
-            ctxG2.fillStyle = gradient;
-            ctxG2.beginPath();
-            ctxG2.arc(centerX, centerY, displayNucleus, 0, Math.PI * 2);
-            ctxG2.fill();
-            ctxG2.fillStyle = 'white';
-            ctxG2.font = paramsG2.display.chargeFont;
-            ctxG2.textAlign = 'center';
-            ctxG2.textBaseline = 'middle';
-            ctxG2.fillText('+', centerX, centerY);
-
+            gradient.addColorStop(0, 'rgba(255,0,255,0.8)'); gradient.addColorStop(1, 'rgba(255,0,128,1)');
+            ctxG2.fillStyle = gradient; ctxG2.beginPath(); ctxG2.arc(centerX, centerY, displayNucleus, 0, Math.PI * 2); ctxG2.fill();
+            ctxG2.fillStyle = 'white'; ctxG2.font = paramsG2.display.chargeFont;
+            ctxG2.textAlign = 'center'; ctxG2.textBaseline = 'middle'; ctxG2.fillText('+', centerX, centerY);
             let currentLayerRadius = 0;
             for (let i = 0; i < paramsG2.layers; i++) {
-                if (currentModeG2 === 'group') {
-                     currentLayerRadius = toDisplayPMG2(paramsG2.physics.baseAtomRadius / paramsG2.layers * (i + 1) + (i * paramsG2.physics.layerSpacingPM / 2));
-                } else { 
-                    currentLayerRadius = toDisplayPMG2( (paramsG2.physics.baseAtomRadius + i * paramsG2.physics.layerSpacingPM) * (1 - (paramsG2.electrons -1) * paramsG2.physics.shrinkPerElectronPM / (paramsG2.physics.baseAtomRadius * 2) ));
-                }
+                if (currentModeG2 === 'group') { currentLayerRadius = toDisplayPMG2(paramsG2.physics.baseAtomRadius / paramsG2.layers * (i + 1) + (i * paramsG2.physics.layerSpacingPM / 2)); }
+                else { currentLayerRadius = toDisplayPMG2( (paramsG2.physics.baseAtomRadius + i * paramsG2.physics.layerSpacingPM) * (1 - (paramsG2.electrons -1) * paramsG2.physics.shrinkPerElectronPM / (paramsG2.physics.baseAtomRadius * 2) )); }
                 currentLayerRadius = Math.max(currentLayerRadius, displayNucleus + 10 * (i + 1)); 
-
-                ctxG2.strokeStyle = layerColorsG2[i % layerColorsG2.length];
-                ctxG2.lineWidth = 2;
-                ctxG2.beginPath();
-                ctxG2.arc(centerX, centerY, currentLayerRadius, 0, Math.PI * 2);
-                ctxG2.stroke();
-                
-                ctxG2.fillStyle = layerColorsG2[i % layerColorsG2.length];
-                ctxG2.font = paramsG2.display.layerLabelFont;
+                ctxG2.strokeStyle = layerColorsG2[i % layerColorsG2.length]; ctxG2.lineWidth = 2;
+                ctxG2.beginPath(); ctxG2.arc(centerX, centerY, currentLayerRadius, 0, Math.PI * 2); ctxG2.stroke();
+                ctxG2.fillStyle = layerColorsG2[i % layerColorsG2.length]; ctxG2.font = paramsG2.display.layerLabelFont;
                 ctxG2.fillText(`n=${i+1}`, centerX + currentLayerRadius + 10, centerY - 10);
-
                 if (i === paramsG2.layers - 1) {
-                    ctxG2.fillStyle = '#FBBF24'; 
+                    ctxG2.fillStyle = 'yellow'; 
                     const angleStep = (Math.PI * 2) / paramsG2.electrons;
                     for (let j = 0; j < paramsG2.electrons; j++) {
                         const angle = angleStep * j;
                         const x = centerX + Math.cos(angle) * currentLayerRadius;
                         const y = centerY + Math.sin(angle) * currentLayerRadius;
-                        ctxG2.beginPath();
-                        ctxG2.arc(x, y, 6, 0, Math.PI * 2); 
-                        ctxG2.fill();
-                        
-                        ctxG2.fillStyle = '#4B5563'; 
-                        ctxG2.font = paramsG2.display.chargeFont;
-                        ctxG2.fillText('-', x, y); 
+                        ctxG2.beginPath(); ctxG2.arc(x, y, 6, 0, Math.PI * 2); ctxG2.fill();
+                        ctxG2.fillStyle = 'black'; ctxG2.font = paramsG2.display.chargeFont; ctxG2.fillText('-', x, y); 
                     }
                 }
             }
             updateInfoG2(atomRadiusPM, nucleusRadiusFM);
         }
-
-        function updateInfoG2(atomRadiusPM, nucleusRadiusFM) {
+        function updateInfoG2(atomRadiusPM, nucleusRadiusFM) { 
             let infoText = currentModeG2 === 'group' ?
-                `<b>同主族元素</b> (最外層電子數: ${paramsG2.electrons})<br>
-                 電子層數 (n): ${paramsG2.layers}<br>` :
-                `<b>同週期元素</b> (電子層數 n: ${paramsG2.layers})<br>
-                 最外層電子數: ${paramsG2.electrons}<br>`;
-            infoText += `估算原子半徑: ${atomRadiusPM.toFixed(1)} pm<br>
-                         估算原子核半徑: ${nucleusRadiusFM.toFixed(1)} fm`;
+                `<b>同主族元素</b> (最外層電子數: ${paramsG2.electrons})<br>電子層數 (n): ${paramsG2.layers}<br>` :
+                `<b>同週期元素</b> (電子層數 n: ${paramsG2.layers})<br>最外層電子數: ${paramsG2.electrons}<br>`;
+            infoText += `估算原子半徑: ${atomRadiusPM.toFixed(1)} pm<br>估算原子核半徑: ${nucleusRadiusFM.toFixed(1)} fm`;
             document.getElementById('infoG2').innerHTML = infoText;
         }
+        function updateParamsG2() { paramsG2.layers = parseInt(document.getElementById('layersG2').value); paramsG2.electrons = parseInt(document.getElementById('electronsG2').value); drawAtomG2(); }
 
-        function updateParamsG2() {
-            paramsG2.layers = parseInt(document.getElementById('layersG2').value);
-            paramsG2.electrons = parseInt(document.getElementById('electronsG2').value);
-            drawAtomG2();
-        }
-        
+
         // --- Game 3: 元素週期表配對 Script ---
-        const periodicTableData = [
-            // Row 1
+        // (Game 3 JS remains the same)
+        const periodicTableData = [ 
             { atomicNumber: 1, symbol: 'H', name_zh: '氫', row: 1, col: 1, fact_zh: '氫是宇宙中最輕、含量最豐富的元素，是恆星的主要燃料。' },
             { atomicNumber: 2, symbol: 'He', name_zh: '氦', row: 1, col: 18, fact_zh: '氦氣非常輕且不可燃，常用於填充氣球和飛艇。' },
-            // Row 2
             { atomicNumber: 3, symbol: 'Li', name_zh: '鋰', row: 2, col: 1, fact_zh: '鋰是最輕的金屬，廣泛應用於充電電池中。' },
             { atomicNumber: 4, symbol: 'Be', name_zh: '鈹', row: 2, col: 2, fact_zh: '鈹合金堅硬且輕，用於航空航天工業。' },
             { atomicNumber: 5, symbol: 'B', name_zh: '硼', row: 2, col: 13, fact_zh: '硼用於製造玻璃纖維和清潔劑，也是植物必需的微量元素。' },
@@ -829,7 +850,6 @@
             { atomicNumber: 8, symbol: 'O', name_zh: '氧', row: 2, col: 16, fact_zh: '氧氣對大多數生命至關重要，支持呼吸和燃燒。' },
             { atomicNumber: 9, symbol: 'F', name_zh: '氟', row: 2, col: 17, fact_zh: '氟是最具反應性的元素，用於牙膏中以防止蛀牙。' },
             { atomicNumber: 10, symbol: 'Ne', name_zh: '氖', row: 2, col: 18, fact_zh: '氖氣在通電時發出紅橙色光芒，用於霓虹燈。' },
-            // Row 3
             { atomicNumber: 11, symbol: 'Na', name_zh: '鈉', row: 3, col: 1, fact_zh: '鈉是食鹽的主要成分之一，對神經功能和體液平衡很重要。' },
             { atomicNumber: 12, symbol: 'Mg', name_zh: '鎂', row: 3, col: 2, fact_zh: '鎂是葉綠素的關鍵成分，也用於輕質合金。' },
             { atomicNumber: 13, symbol: 'Al', name_zh: '鋁', row: 3, col: 13, fact_zh: '鋁輕巧、耐腐蝕，廣泛用於飛機、汽車和包裝材料。' },
@@ -838,7 +858,6 @@
             { atomicNumber: 16, symbol: 'S', name_zh: '硫', row: 3, col: 16, fact_zh: '硫存在於某些氨基酸中，用於製造硫酸和火藥。' },
             { atomicNumber: 17, symbol: 'Cl', name_zh: '氯', row: 3, col: 17, fact_zh: '氯常用於消毒飲用水和游泳池，也是食鹽的成分。' },
             { atomicNumber: 18, symbol: 'Ar', name_zh: '氬', row: 3, col: 18, fact_zh: '氬氣是一種惰性氣體，用於燈泡和焊接。' },
-            // Row 4
             { atomicNumber: 19, symbol: 'K', name_zh: '鉀', row: 4, col: 1, fact_zh: '鉀對細胞功能至關重要，存在於香蕉等食物中。' },
             { atomicNumber: 20, symbol: 'Ca', name_zh: '鈣', row: 4, col: 2, fact_zh: '鈣是骨骼和牙齒的主要成分，也參與肌肉收縮。' },
             { atomicNumber: 21, symbol: 'Sc', name_zh: '鈧', row: 4, col: 3, fact_zh: '鈧用於製造高性能合金和某些類型的照明設備。' },
@@ -852,149 +871,95 @@
             { atomicNumber: 29, symbol: 'Cu', name_zh: '銅', row: 4, col: 11, fact_zh: '銅具有優良的導電性和導熱性，廣泛用於電線和管道。' },
             { atomicNumber: 30, symbol: 'Zn', name_zh: '鋅', row: 4, col: 12, fact_zh: '鋅用於鍍鋅以防止鐵生鏽，也是人體必需的微量元素。' }
         ];
-
         const gameGridG3 = document.getElementById('periodic-table-game-grid');
         const currentElementDisplayG3 = document.getElementById('current-element-display');
-        const diceButtonG3 = document.getElementById('dice-button');
+        const diceButtonG3 = document.getElementById('dice-buttonG3'); 
         const factTextG3 = document.getElementById('fact-text');
         const game3MessageG3 = document.getElementById('game3-message');
         const game3WinMessageG3 = document.getElementById('game3-win-message');
-        const restartGame3ButtonG3 = document.getElementById('restart-game3-button');
-        const game3ContainerG3 = document.getElementById('game3-container');
+        const restartGameButtonG3 = document.getElementById('restart-game-buttonG3'); 
+        const playAgainGame3ButtonG3 = document.getElementById('play-again-game3-button'); 
 
+        const game3ContentArea = document.querySelector('#game3-container .game-content-area');
 
-        let unplacedElementsG3 = [];
-        let currentElementToPlaceG3 = null;
-        let placedCountG3 = 0;
+        let unplacedElementsG3 = [], currentElementToPlaceG3 = null, placedCountG3 = 0;
         let game3Initialized = false;
 
-        function setupPeriodicTableG3() {
+        function setupPeriodicTableG3() { 
             gameGridG3.innerHTML = ''; 
             for (let r = 1; r <= 4; r++) { 
                 for (let c = 1; c <= 18; c++) { 
                     const cell = document.createElement('div');
-                    cell.classList.add('pt-cell');
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
-
+                    cell.classList.add('pt-cell'); cell.dataset.row = r; cell.dataset.col = c;
                     const element = periodicTableData.find(el => el.row === r && el.col === c);
-                    if (element) {
-                        cell.classList.add('empty-interactive');
-                        cell.dataset.atomicNumber = element.atomicNumber;
-                        cell.addEventListener('click', handleCellClickG3);
-                    } else {
-                        cell.classList.add('opacity-50', 'bg-gray-300'); 
-                    }
+                    if (element) { cell.classList.add('empty-interactive'); cell.dataset.atomicNumber = element.atomicNumber; cell.addEventListener('click', handleCellClickG3); }
+                    else { cell.classList.add('opacity-30', 'bg-slate-700'); } 
                     gameGridG3.appendChild(cell);
                 }
             }
         }
-        
-        function rollDiceG3() {
-            if (unplacedElementsG3.length === 0) {
-                currentElementDisplayG3.textContent = "全部完成！";
-                diceButtonG3.disabled = true;
-                return;
-            }
+        function rollDiceG3() { 
+            if (unplacedElementsG3.length === 0) { currentElementDisplayG3.textContent = "全部完成！"; diceButtonG3.disabled = true; return; }
             const randomIndex = Math.floor(Math.random() * unplacedElementsG3.length);
             currentElementToPlaceG3 = unplacedElementsG3[randomIndex];
             currentElementDisplayG3.textContent = `${currentElementToPlaceG3.symbol} (${currentElementToPlaceG3.name_zh})`;
-            game3MessageG3.textContent = ''; 
-            diceButtonG3.disabled = true; 
+            game3MessageG3.textContent = ''; diceButtonG3.disabled = true; 
         }
-
-        function handleCellClickG3(event) {
-            if (!currentElementToPlaceG3) {
-                game3MessageG3.textContent = "請先擲骰子選擇一個元素！";
-                return;
-            }
-
+        function handleCellClickG3(event) { 
+            if (!currentElementToPlaceG3) { game3MessageG3.textContent = "請先擲骰子選擇一個元素！"; return; }
             const clickedCell = event.currentTarget;
-            if (clickedCell.classList.contains('filled')) {
-                game3MessageG3.textContent = "這個位置已經填好了！";
-                return;
-            }
-
+            if (clickedCell.classList.contains('filled')) { game3MessageG3.textContent = "這個位置已經填好了！"; return; }
             const clickedAtomicNumber = parseInt(clickedCell.dataset.atomicNumber);
 
             if (clickedAtomicNumber === currentElementToPlaceG3.atomicNumber) {
-                clickedCell.innerHTML = `
-                    <span class="atomic-number">${currentElementToPlaceG3.atomicNumber}</span>
-                    <span class="symbol">${currentElementToPlaceG3.symbol}</span>
-                    <span class="name">${currentElementToPlaceG3.name_zh}</span>
-                `;
-                clickedCell.classList.remove('empty-interactive');
-                clickedCell.classList.add('filled');
+                clickedCell.innerHTML = `<span class="atomic-number">${currentElementToPlaceG3.atomicNumber}</span><span class="symbol">${currentElementToPlaceG3.symbol}</span><span class="name">${currentElementToPlaceG3.name_zh}</span>`;
+                clickedCell.classList.remove('empty-interactive'); clickedCell.classList.add('filled');
                 clickedCell.style.backgroundColor = getColorForGroupG3(currentElementToPlaceG3.col); 
-                
+                clickedCell.style.color = 'var(--cp-bg-dark)'; 
+                clickedCell.style.textShadow = 'none';
                 factTextG3.textContent = currentElementToPlaceG3.fact_zh;
                 game3MessageG3.textContent = `正確！ ${currentElementToPlaceG3.name_zh} 放置成功！`;
-                game3MessageG3.classList.remove('text-red-600');
-                game3MessageG3.classList.add('text-green-600');
-
-
+                game3MessageG3.classList.remove('text-red-600'); game3MessageG3.classList.add('text-green-600');
                 unplacedElementsG3 = unplacedElementsG3.filter(el => el.atomicNumber !== currentElementToPlaceG3.atomicNumber);
-                placedCountG3++;
-                currentElementToPlaceG3 = null;
-                currentElementDisplayG3.textContent = "-";
+                placedCountG3++; currentElementToPlaceG3 = null; currentElementDisplayG3.textContent = "-";
                 diceButtonG3.disabled = false; 
-
                 if (placedCountG3 === periodicTableData.length) {
-                    game3WinMessageG3.style.display = 'block';
-                    diceButtonG3.disabled = true;
+                    game3WinMessageG3.style.display = 'block'; diceButtonG3.disabled = true;
+                    restartGameButtonG3.style.display = 'none'; 
                     currentElementDisplayG3.textContent = "遊戲勝利！";
                 }
             } else {
                 game3MessageG3.textContent = "錯誤的位置！請再試一次。";
-                game3MessageG3.classList.remove('text-green-600');
-                game3MessageG3.classList.add('text-red-600');
-                
-                const gameContentArea = game3ContainerG3.querySelector('.flex.flex-col.items-center');
-                if (gameContentArea) {
-                    gameContentArea.classList.add('game-board-flash-red');
-                    setTimeout(() => {
-                        gameContentArea.classList.remove('game-board-flash-red');
-                    }, 500);
-                }
+                game3MessageG3.classList.remove('text-green-600'); game3MessageG3.classList.add('text-red-600');
+                if (game3ContentArea) { game3ContentArea.classList.add('game-board-flash-red'); setTimeout(() => { game3ContentArea.classList.remove('game-board-flash-red'); }, 500); }
             }
         }
-        
-        function getColorForGroupG3(column) {
-            if (column === 1) return '#FCA5A5'; 
-            if (column === 2) return '#FDBA74'; 
-            if (column >= 3 && column <= 12) return '#FDE047'; 
-            if (column === 13) return '#A7F3D0'; 
-            if (column === 14) return '#93C5FD'; 
-            if (column === 15) return '#A5B4FC'; 
-            if (column === 16) return '#D8B4FE'; 
-            if (column === 17) return '#F9A8D4'; 
-            if (column === 18) return '#C4B5FD'; 
-            return '#E5E7EB'; 
+        function getColorForGroupG3(column) { 
+            if (column === 1) return 'var(--cp-text-neon-magenta)'; 
+            if (column === 2) return '#FF7F00';  
+            if (column >= 3 && column <= 12) return '#FFFF00'; 
+            if (column === 13) return 'var(--cp-accent-green)'; 
+            if (column === 14) return 'var(--cp-accent-blue)'; 
+            if (column === 15) return '#7F00FF'; 
+            if (column === 16) return '#FF1493'; 
+            if (column === 17) return 'var(--cp-text-neon-cyan)'; 
+            if (column === 18) return '#C0C0C0'; 
+            return 'var(--cp-text-primary)'; 
         }
-
-        function resetGame3() {
-            unplacedElementsG3 = [...periodicTableData];
-            currentElementToPlaceG3 = null;
-            placedCountG3 = 0;
-            setupPeriodicTableG3();
-            currentElementDisplayG3.textContent = "-";
-            factTextG3.textContent = "-";
-            game3MessageG3.textContent = "";
-            diceButtonG3.disabled = false;
-            game3WinMessageG3.style.display = 'none';
+        function resetGame3() { 
+            unplacedElementsG3 = [...periodicTableData]; currentElementToPlaceG3 = null; placedCountG3 = 0;
+            setupPeriodicTableG3(); currentElementDisplayG3.textContent = "-";
+            factTextG3.textContent = "-"; game3MessageG3.textContent = "";
+            diceButtonG3.disabled = false; game3WinMessageG3.style.display = 'none';
+            if(restartGameButtonG3) restartGameButtonG3.style.display = 'inline-block'; 
         }
-
-        function initGame3() {
-            // Ensure IDs in G3 script match HTML
-            // e.g. gameGridG3, currentElementDisplayG3 etc.
-            resetGame3();
+        function initGame3() { 
+            resetGame3(); 
             diceButtonG3.addEventListener('click', rollDiceG3);
-            restartGame3ButtonG3.addEventListener('click', resetGame3);
-            game3Initialized = true;
+            restartGameButtonG3.addEventListener('click', resetGame3); 
+            playAgainGame3ButtonG3.addEventListener('click', resetGame3); 
+            game3Initialized = true; 
         }
-        
     </script>
 </body>
 </html>
-
-
