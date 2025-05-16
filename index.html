@@ -3,1126 +3,998 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>互動化學演示中心</title>
+    <title>化學奇境：互動遊戲樂園</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans TC', 'Inter', sans-serif;
         }
-        /* Basic scrollbar styling for demo content */
-        #demoContent::-webkit-scrollbar {
-            width: 8px;
+
+        .nav-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.3s, color 0.3s;
+            cursor: pointer;
+            background-color: #4A5568; /* bg-slate-600 */
+            color: white;
         }
-        #demoContent::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
+
+        .nav-button:hover {
+            background-color: #2D3748; /* bg-slate-700 */
         }
-        #demoContent::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
+
+        .active-nav-button {
+            background-color: #3B82F6; /* bg-blue-500 */
+            color: white;
         }
-        #demoContent::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .active-nav-button:hover {
+            background-color: #2563EB; /* bg-blue-600 */
         }
-        /* Ensure canvas elements are responsive within their containers if not intrinsically sized by JS */
-        canvas {
+
+        .game-container {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-top: 1rem;
+        }
+
+        /* Game 1: 化學配對消消樂 Specific Styles */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0); }
+        }
+        @keyframes scoreFadeOut {
+            0% { opacity: 1; transform: translateY(0) scale(1.8); }
+            60% { opacity: 1; transform: translateY(-40px) scale(1.8); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.8); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .score-popup {
+            position: fixed;
+            font-weight: bold;
+            font-size: 3rem; /* Adjusted for better visibility */
+            text-shadow: 0 0 8px rgba(0,0,0,0.8);
+            animation: scoreFadeOut 2.5s ease-out forwards;
+            z-index: 1000; /* Ensure it's above other elements */
+            pointer-events: none;
+        }
+        .cell-container { /* Game 1 */
+            position: relative;
+            width: clamp(60px, 15vw, 96px); /* Responsive cell size */
+            height: clamp(60px, 15vh, 96px);
+            transition: all 0.3s ease;
+        }
+        .cell-removing { /* Game 1 */
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        .shake { /* Game 1 */
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .celebration { /* Game 1 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+        .celebration-message { /* Game 1 */
+            font-size: clamp(1.5rem, 5vw, 3rem); /* Responsive font size */
+            font-weight: bold;
+            color: gold;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            margin-bottom: 2rem;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Game 2: 原子半徑大小變化 Specific Styles */
+        #game2-container canvas {
+            border: 1px solid #D1D5DB; /* Tailwind gray-300 */
+            background: #F9FAFB; /* Tailwind gray-50 */
+            margin: 10px auto; /* Center canvas */
+            display: block;
             max-width: 100%;
-            height: auto !important; /* Override fixed heights if necessary, let JS control if possible */
+            height: auto;
         }
-        /* Styles for the custom alert */
-        #customAlertModal {
-            transition: opacity 0.3s ease-in-out;
+        #game2-container .controls button, #game2-container .param-controls select {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: 1px solid #D1D5DB;
+            background-color: white;
+            transition: background-color 0.2s;
         }
+        #game2-container .controls button:hover, #game2-container .param-controls select:hover {
+            background-color: #F3F4F6; /* gray-100 */
+        }
+        #game2-container .controls button.active-mode {
+            background-color: #3B82F6; /* blue-500 */
+            color: white;
+            border-color: #3B82F6;
+        }
+        #game2-container .explanation, #game2-container .reason-box {
+            max-width: 600px; /* Match original width */
+            margin: 10px auto; /* Center the boxes */
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+        #game2-container .explanation {
+            background-color: #E5E7EB; /* gray-200 */
+        }
+        #game2-container .reason-box {
+            background-color: #DBEAFE; /* blue-100 */
+            border-left: 4px solid #3B82F6; /* blue-500 */
+            display: none; /* Initially hidden */
+        }
+        #game2-container .reason-box.period-reason { /* For period specific styling if needed */
+            background-color: #D1FAE5; /* green-100 */
+            border-left-color: #10B981; /* green-500 */
+        }
+
+        /* Game 3: 元素週期表配對 Specific Styles - UPDATED */
+        #periodic-table-game-grid {
+            display: grid;
+            grid-template-columns: repeat(18, minmax(35px, 1fr)); /* Cells at least 35px wide */
+            gap: 4px;
+            max-width: 900px; /* Max width of the entire table */
+            width: 100%; /* Make it take full available width up to max-width */
+            margin: 20px auto;
+            padding: 5px; /* Reduced padding slightly */
+            background-color: #e0e0e0; 
+            border-radius: 8px;
+        }
+        .pt-cell {
+            aspect-ratio: 1 / 1; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: clamp(0.6rem, 1.8vw, 0.9rem); /* Base font for cell, adjusted */
+            cursor: default;
+            transition: background-color 0.3s;
+            padding: 2px; /* Added small padding inside cell */
+            position: relative; /* For absolute positioning of atomic number */
+            overflow: hidden; /* Prevent content spillover */
+        }
+        .pt-cell.empty-interactive {
+            background-color: #a7f3d0; 
+            cursor: pointer;
+        }
+        .pt-cell.empty-interactive:hover {
+            background-color: #6ee7b7;
+        }
+        .pt-cell.filled {
+            /* background-color will be set by JS using getColorForGroup */
+            cursor: default;
+        }
+        .pt-cell .atomic-number {
+            font-size: clamp(0.55rem, 2vw, 0.75rem); /* Adjusted */
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            color: #555; /* Slightly dimmer color */
+        }
+        .pt-cell .symbol {
+            font-size: clamp(0.9rem, 4vw, 1.6rem); /* Adjusted significantly for better visibility */
+            font-weight: bold;
+            line-height: 1; /* Compact line height */
+        }
+        .pt-cell .name {
+            font-size: clamp(0.5rem, 1.8vw, 0.75rem); /* Adjusted */
+            margin-top: 2px; /* Space below symbol */
+            text-align: center;
+            line-height: 1.1; /* Slightly more space for name lines */
+        }
+        #game3-container .game-board-flash-red { /* Main game area flash */
+            animation: flashRedBackground 0.5s ease-in-out;
+        }
+        @keyframes flashRedBackground { /* Changed to target background of a larger container */
+            0%, 100% { background-color: transparent; } /* Assuming parent is transparent or has its own bg */
+            50% { background-color: #FECACA; } /* red-200 */
+        }
+        #element-fact-window {
+            min-height: 50px; 
+        }
+
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 to-slate-700 text-white min-h-screen flex flex-col items-center justify-center p-4 selection:bg-sky-500 selection:text-white">
+<body class="bg-slate-100 min-h-screen flex flex-col">
+    <header class="bg-sky-700 text-white p-4 shadow-lg">
+        <h1 class="text-2xl md:text-3xl font-bold text-center">化學奇境：互動遊戲樂園</h1>
+    </header>
 
-    <div id="homeScreen" class="text-center w-full max-w-4xl mx-auto">
-        <header class="mb-12">
-            <h1 class="text-5xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-cyan-300 py-2">
-                化學演示中心
-            </h1>
-            <p class="text-slate-300 text-lg mt-4">探索有趣的互動化學演示！</p>
-        </header>
-        <main id="demoCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8">
-            </main>
-    </div>
+    <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4 p-3 bg-sky-600 shadow-md">
+        <button id="nav-game1" class="nav-button active-nav-button">化學配對消消樂</button>
+        <button id="nav-game2" class="nav-button">原子半徑大小變化</button>
+        <button id="nav-game3" class="nav-button">元素週期表配對</button>
+    </nav>
 
-    <div id="demoView" class="hidden w-full max-w-6xl mx-auto bg-slate-800 p-4 sm:p-6 md:p-8 rounded-xl shadow-2xl flex flex-col">
-        <header class="flex justify-between items-center mb-6">
-            <h2 id="demoTitle" class="text-3xl md:text-4xl font-bold text-sky-300"></h2>
-            <button id="backButton" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75">
-                返回首頁
-            </button>
-        </header>
-        <div id="demoContentWrapper" class="flex-grow bg-slate-100 text-gray-800 p-4 sm:p-6 rounded-lg shadow-inner overflow-hidden">
-             <div id="demoContent" class="h-[65vh] sm:h-[70vh] overflow-auto">
+    <main class="flex-grow p-2 md:p-6">
+        <div id="game1-container" class="game-container">
+            <div class="flex flex-col items-center justify-center p-1">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">化學配對消消樂</h1>
+                <div id="startScreenG1" class="fade-in text-center">
+                    <button id="startButtonG1" class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300 text-lg">
+                        開始遊戲
+                    </button>
                 </div>
-        </div>
-    </div>
-
-    <div id="customAlertModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md text-gray-800 transform transition-all scale-95 opacity-0" id="customAlertBox">
-            <h3 id="customAlertTitle" class="text-xl font-semibold mb-4 text-sky-700">訊息</h3>
-            <p id="customAlertMessage" class="mb-6 text-slate-700"></p>
-            <div class="text-right">
-                <button id="customAlertOkButton" class="bg-sky-500 hover:bg-sky-600 text-white font-medium px-6 py-2 rounded-md shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400">
-                    確定
-                </button>
+                <div class="flex flex-col lg:flex-row gap-4 md:gap-8 w-full max-w-4xl">
+                    <div id="gridG1" class="grid grid-cols-4 gap-2 md:gap-4 mx-auto" style="display: none;"></div>
+                    <div id="leaderboardG1" class="bg-white p-4 md:p-6 rounded-lg shadow-md w-full lg:w-80 order-first lg:order-last" style="display: none;">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">排行榜</h2>
+                        <ul id="leaderboardListG1" class="space-y-2"></ul>
+                        <button id="clearLeaderboardG1" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition duration-300 mt-4 w-full">
+                            清除排名
+                        </button>
+                    </div>
+                </div>
+                <p id="messageG1" class="text-lg md:text-xl font-semibold text-gray-700 mt-6 text-center"></p>
+                <div id="restartScreenG1" class="fade-in mt-4 text-center" style="display: none;">
+                    <button id="restartButtonG1" class="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition duration-300 text-lg">
+                        重新開始
+                    </button>
+                </div>
+                <p class="text-xl md:text-2xl font-bold text-gray-800 mt-6">分數: <span id="scoreG1">0</span></p>
+                <div id="nameInputModalG1" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="display: none; z-index: 999;">
+                    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">輸入你的名稱</h2>
+                        <input type="text" id="playerNameG1" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4" placeholder="你的名稱">
+                        <button id="confirmNameG1" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition duration-300 w-full">
+                            確認
+                        </button>
+                    </div>
+                </div>
+                <div id="celebrationG1" class="celebration" style="display: none;">
+                    <div class="celebration-message">恭喜你完成遊戲！</div>
+                    <div class="celebration-message" style="font-size: clamp(1rem, 4vw, 2rem);">你的分數: <span id="finalScoreG1">0</span></div>
+                </div>
             </div>
         </div>
-    </div>
+
+        <div id="game2-container" class="game-container" style="display: none;">
+            <div class="flex flex-col items-center p-1">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">原子半徑大小變化</h1>
+                <div class="controls flex flex-wrap justify-center gap-2 mb-4">
+                    <button onclick="toggleModeG2('group')" id="groupBtnG2" class="active-mode">主族變化模式</button>
+                    <button onclick="handleReasonG2('group')" id="groupReasonBtnG2">原因 (主族)</button>
+                    <button onclick="toggleModeG2('period')" id="periodBtnG2">週期變化模式</button>
+                    <button onclick="handleReasonG2('period')" id="periodReasonBtnG2">原因 (週期)</button>
+                    </div>
+                
+                <div class="param-controls bg-gray-100 p-4 rounded-lg shadow mb-4 w-full max-w-lg text-center">
+                    <label class="block mb-2">電子層數 (n):
+                        <select id="layersG2" onchange="updateParamsG2()" class="ml-2 p-1 border rounded">
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </label>
+                    
+                    <label class="block">最外層電子數:
+                        <select id="electronsG2" onchange="updateParamsG2()" class="ml-2 p-1 border rounded">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                        </select>
+                    </label>
+                </div>
+            
+                <canvas id="atomCanvasG2" width="600" height="400"></canvas> <div id="infoG2" class="explanation text-center"></div>
+                <div id="reasonG2" class="reason-box"></div>
+            </div>
+        </div>
+
+        <div id="game3-container" class="game-container" style="display: none;">
+             <div class="flex flex-col items-center p-1"> {/* This div will be flashed red on error */}
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">元素週期表配對</h1>
+                
+                <div class="mb-4 p-4 bg-indigo-100 rounded-lg shadow text-center w-full max-w-md">
+                    <p class="text-lg">目前要放置的元素：</p>
+                    <p id="current-element-display" class="text-2xl font-bold text-indigo-700">-</p>
+                </div>
+
+                <button id="dice-button" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out mb-6 text-lg">
+                    🎲 擲骰子取元素
+                </button>
+
+                <div id="periodic-table-game-grid">
+                    </div>
+
+                <div id="element-fact-window" class="mt-6 p-4 bg-lime-100 rounded-lg shadow w-full max-w-2xl text-center">
+                    <h3 class="font-semibold text-lime-800 text-lg mb-1">元素小知識：</h3>
+                    <p id="fact-text" class="text-lime-700">-</p>
+                </div>
+                
+                <p id="game3-message" class="text-xl font-semibold text-red-600 mt-4"></p>
+
+                <div id="game3-win-message" class="hidden mt-6 p-6 bg-green-500 text-white rounded-lg shadow-xl text-center">
+                    <h2 class="text-3xl font-bold mb-2">🎉 恭喜！ 🎉</h2>
+                    <p class="text-xl">您已成功完成元素週期表！</p>
+                    <button id="restart-game3-button" class="mt-4 bg-white text-green-600 font-bold py-2 px-4 rounded-lg hover:bg-green-100 transition">
+                        重新開始
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center p-4 text-slate-600 text-sm bg-slate-200">
+        © 2025 化學遊戲樂園
+    </footer>
 
     <script>
-        // --- Custom Alert Functionality ---
-        const customAlertModal = document.getElementById('customAlertModal');
-        const customAlertBox = document.getElementById('customAlertBox');
-        const customAlertMessageEl = document.getElementById('customAlertMessage');
-        const customAlertTitleEl = document.getElementById('customAlertTitle');
-        const customAlertOkButton = document.getElementById('customAlertOkButton');
+        // Main Navigation Logic
+        const navButtons = document.querySelectorAll('.nav-button');
+        const gameContainers = document.querySelectorAll('.game-container');
 
-        function showCustomAlert(message, title = '訊息') {
-            customAlertMessageEl.textContent = message;
-            customAlertTitleEl.textContent = title;
-            customAlertModal.style.display = 'flex';
-            setTimeout(() => { // For transition effect
-                customAlertBox.style.transform = 'scale(1)';
-                customAlertBox.style.opacity = '1';
-            }, 50);
-
-
-            // Handle OK button click
-            customAlertOkButton.onclick = () => {
-                customAlertBox.style.transform = 'scale(0.95)';
-                customAlertBox.style.opacity = '0';
-                setTimeout(() => {
-                    customAlertModal.style.display = 'none';
-                }, 300);
-            };
-            
-            // Close on escape key
-            const closeOnEscape = (e) => {
-                if (e.key === 'Escape') {
-                    customAlertOkButton.click();
-                    document.removeEventListener('keydown', closeOnEscape);
-                }
-            };
-            document.addEventListener('keydown', closeOnEscape);
-            
-            // Ensure OK button is focused for accessibility
-            customAlertOkButton.focus();
-        }
-
-
-        // --- Main Application Script ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const homeScreen = document.getElementById('homeScreen');
-            const demoView = document.getElementById('demoView');
-            const demoContentEl = document.getElementById('demoContent');
-            const demoTitleEl = document.getElementById('demoTitle');
-            const backButton = document.getElementById('backButton');
-            const demoCardsContainer = document.getElementById('demoCardsContainer');
-
-            const demos = [
-                { id: 'chemical_naming', title: '化學配對消消樂', description: '測試您的化學式與名稱配對技巧。', icon: '🧩', bgColor: 'bg-emerald-600', hoverColor: 'hover:bg-emerald-700' },
-                { id: 'ionic_radius', title: '離子半徑的變化', description: '觀察核電荷數與電子數如何影響離子半徑。', icon: '🔬', bgColor: 'bg-sky-600', hoverColor: 'hover:bg-sky-700' },
-                { id: 'solution_animation', title: '稀濃溶液動畫', description: '視覺化溶液稀釋與濃縮的過程。', icon: '⚗️', bgColor: 'bg-amber-600', hoverColor: 'hover:bg-amber-700' },
-                { id: 'atomic_radius', title: '原子半徑變化', description: '探索原子半徑在元素週期表中的趨勢。', icon: '⚛️', bgColor: 'bg-purple-600', hoverColor: 'hover:bg-purple-700' }
-            ];
-
-            // Create demo cards on the home screen
-            demos.forEach(demo => {
-                const card = document.createElement('div');
-                card.className = `p-6 rounded-xl shadow-xl transform transition duration-300 hover:scale-105 cursor-pointer text-left flex flex-col justify-between ${demo.bgColor} ${demo.hoverColor}`;
-                card.innerHTML = `
-                    <div>
-                        <div class="text-4xl mb-3">${demo.icon}</div>
-                        <h2 class="text-2xl font-semibold mb-2">${demo.title}</h2>
-                        <p class="text-sm text-slate-200">${demo.description}</p>
-                    </div>
-                    <button class="mt-4 w-full bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-md transition duration-150">
-                        開始演示
-                    </button>
-                `;
-                card.addEventListener('click', () => showDemo(demo.id, demo.title));
-                demoCardsContainer.appendChild(card);
+        function showGame(gameId) {
+            gameContainers.forEach(container => {
+                container.style.display = 'none';
+            });
+            navButtons.forEach(button => {
+                button.classList.remove('active-nav-button');
             });
 
-            function showHomeScreen() {
-                homeScreen.classList.remove('hidden');
-                homeScreen.classList.add('block'); // Or flex, grid depending on layout
-                demoView.classList.add('hidden');
-                demoView.classList.remove('flex'); 
-                demoContentEl.innerHTML = ''; // Clear previous demo content
-                
-                const dynamicStyle = document.getElementById('demoSpecificStyle');
-                if (dynamicStyle) dynamicStyle.remove();
-                const dynamicScript = document.getElementById('demoSpecificScript');
-                if (dynamicScript) dynamicScript.remove();
+            document.getElementById(gameId + '-container').style.display = 'block';
+            document.getElementById('nav-' + gameId).classList.add('active-nav-button');
+            
+            // Special initialization if needed
+            if (gameId === 'game2') {
+                 if (typeof initGame2 === "function") initGame2();
+            } else if (gameId === 'game3') {
+                if (typeof initGame3 === "function" && !game3Initialized) initGame3();
             }
-
-            function showDemo(demoId, demoTitleText) {
-                homeScreen.classList.add('hidden');
-                homeScreen.classList.remove('block');
-                demoView.classList.remove('hidden');
-                demoView.classList.add('flex'); // Use flex for demoView layout
-                demoTitleEl.textContent = demoTitleText;
-                loadDemoContent(demoId);
-                // Scroll to top of demo view
-                demoView.scrollIntoView({ behavior: 'smooth' });
-            }
-
-            backButton.addEventListener('click', showHomeScreen);
-
-            async function loadDemoContent(demoId) {
-                let htmlContent = '';
-                let cssContent = '';
-                let jsContent = '';
-
-                demoContentEl.innerHTML = ''; // Clear previous
-                const oldDemoStyle = document.getElementById('demoSpecificStyle');
-                if (oldDemoStyle) oldDemoStyle.remove();
-                const oldDemoScript = document.getElementById('demoSpecificScript');
-                if (oldDemoScript) oldDemoScript.remove();
-
-                // Fetch or define content for each demo
-                if (demoId === 'chemical_naming') {
-                    htmlContent = getChemicalNamingHTML();
-                    cssContent = getChemicalNamingCSS();
-                    jsContent = getChemicalNamingJS().replace(/alert\(([^)]+)\)/g, "showCustomAlert($1)");
-                } else if (demoId === 'ionic_radius') {
-                    htmlContent = getIonicRadiusHTML();
-                    cssContent = getIonicRadiusCSS();
-                    jsContent = getIonicRadiusJS();
-                } else if (demoId === 'solution_animation') {
-                    htmlContent = getSolutionAnimationHTML();
-                    cssContent = getSolutionAnimationCSS();
-                    jsContent = getSolutionAnimationJS();
-                } else if (demoId === 'atomic_radius') {
-                    htmlContent = getAtomicRadiusHTML();
-                    cssContent = getAtomicRadiusCSS();
-                    jsContent = getAtomicRadiusJS();
-                }
-
-                demoContentEl.innerHTML = htmlContent;
-
-                if (cssContent) {
-                    const styleTag = document.createElement('style');
-                    styleTag.id = 'demoSpecificStyle';
-                    styleTag.textContent = cssContent;
-                    document.head.appendChild(styleTag);
-                }
-
-                if (jsContent) {
-                    // For scripts that rely on Chart.js, ensure it's loaded.
-                    if (demoId === 'solution_animation' && typeof Chart === 'undefined') {
-                        console.warn('Chart.js not loaded yet for solution_animation. Retrying...');
-                        // This case should be handled by Chart.js being preloaded or waiting.
-                        // For simplicity, we assume Chart.js is available from the global script tag.
-                        // If issues, a more robust loader for Chart.js would be needed.
-                    }
-                    
-                    // Scripts are executed by adding them to the DOM.
-                    // We wrap the JS content in a function and call it to ensure it runs in the current scope
-                    // and can be re-initialized if needed. This also helps with potential 'use strict' issues.
-                    const scriptTag = document.createElement('script');
-                    scriptTag.id = 'demoSpecificScript';
-                    // IIFE to ensure code runs and variables are scoped
-                    scriptTag.textContent = `(() => { ${jsContent} })();`; 
-                    document.body.appendChild(scriptTag); // Appending to body ensures DOM is ready
-                }
-                 // Ensure child elements like canvas resize correctly after content load
-                window.dispatchEvent(new Event('resize'));
-            }
-
-            // --- Demo Content Functions ---
-
-            function getChemicalNamingHTML() {
-                return `
-                    <div class_to_be_styled_by_tailwind="bg-gray-100 flex flex-col items-center justify-center p-4 min-h-full text-gray-800">
-                        <div id="startScreen" class="fade-in text-center">
-                             <h1 class="text-3xl font-bold text-gray-800 mb-6">化學配對消消樂</h1>
-                            <button id="startButton" class="bg-green-500 text-white px-8 py-4 rounded-lg shadow-md hover:bg-green-600 transition duration-300 text-lg">
-                                開始遊戲
-                            </button>
-                        </div>
-
-                        <div class="flex flex-col md:flex-row gap-6 items-start mt-6">
-                            <div id="grid" class="grid grid-cols-4 gap-3" style="display: none;"></div>
-                            <div id="leaderboard" class="bg-white p-5 rounded-lg shadow-md w-full md:w-80 order-first md:order-last" style="display: none;">
-                                <h2 class="text-xl font-bold text-gray-800 mb-3">排行榜</h2>
-                                <ul id="leaderboardList" class="space-y-1.5"></ul>
-                                <button id="clearLeaderboard" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition duration-300 mt-4 w-full">
-                                    清除排名
-                                </button>
-                            </div>
-                        </div>
-
-                        <p id="message" class="text-lg font-semibold text-gray-700 mt-6"></p>
-
-                        <div id="restartScreen" class="fade-in mt-6" style="display: none;">
-                            <button id="restartButton" class="bg-blue-500 text-white px-8 py-4 rounded-lg shadow-md hover:bg-blue-600 transition duration-300 text-lg">
-                                重新開始
-                            </button>
-                        </div>
-                        <p class="text-2xl font-bold text-gray-800 mt-6">分數: <span id="score">0</span></p>
-                        <div id="nameInputModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40" style="display: none;">
-                            <div class="bg-white p-6 rounded-lg shadow-md w-96">
-                                <h2 class="text-xl font-bold text-gray-800 mb-4">輸入你的名稱</h2>
-                                <input type="text" id="playerName" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4" placeholder="你的名稱">
-                                <button id="confirmName" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition duration-300 w-full">
-                                    確認
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            function getChemicalNamingCSS() {
-                return `
-                    @keyframes fadeIn {
-                        from { opacity: 0; transform: translateY(10px); }
-                        to { opacity: 1; transform: translateY(0); }
-                    }
-                    .fade-in {
-                        animation: fadeIn 0.5s ease-in-out;
-                    }
-                    #grid > div { /* Style for game cells */
-                        width: 5rem; height: 5rem; /* Adjust size as needed */
-                        font-size: 0.9rem; /* Smaller font for fitting text */
-                        line-height: 1.2;
-                        padding: 0.25rem;
-                        overflow-wrap: break-word;
-                        word-break: break-all;
-                        hyphens: auto;
-                    }
-                     @media (max-width: 640px) { /* Smaller screens */
-                        #grid {
-                            gap: 0.5rem; /* Smaller gap */
-                        }
-                        #grid > div {
-                             width: calc( (100% / 4) - 0.5rem ); /* Responsive cell width */
-                             height: auto;
-                             aspect-ratio: 1 / 1; /* Maintain square shape */
-                             font-size: 0.75rem;
-                        }
-                        #leaderboard { width: 100%; margin-top: 1rem;}
-                    }
-                `;
-            }
-            function getChemicalNamingJS() {
-                // Content of the script from 化學式命名.html, modified for alert
-                return `
-                    const chemicalPairs = [
-                        { name: '氯化鉀', formula: 'KCl' }, { name: '一氧化二氮', formula: 'N₂O' }, { name: '氧化鐵', formula: 'Fe₂O₃' },
-                        { name: '二氧化碳', formula: 'CO₂' }, { name: '二氧化硅', formula: 'SiO₂' }, { name: '硝酸', formula: 'HNO₃' },
-                        { name: '碳酸', formula: 'H₂CO₃' }, { name: '硫酸', formula: 'H₂SO₄' }, { name: '硫酸鉀', formula: 'K₂SO₄' },
-                        { name: '碳酸鎂', formula: 'MgCO₃' }, { name: '硝酸鈉', formula: 'NaNO₃' }, { name: '碳酸鈣', formula: 'CaCO₃' },
-                        { name: '一氧化二氫', formula: 'H₂O' }, { name: '四氧化三鐵', formula: 'Fe₃O₄' }, { name: '五氧化二氮', formula: 'N₂O₅' },
-                        { name: '七氧化二氯', formula: 'Cl₂O₇' }, { name: '硫酸鈉', formula: 'Na₂SO₄' }, { name: '碳酸鋁', formula: 'Al₂(CO₃)₃' },
-                        { name: '氧氣', formula: 'O₂' }, { name: '氫氣', formula: 'H₂' }, { name: '氦氣', formula: 'He' },
-                        { name: '鉀', formula: 'K' }, { name: '鈉', formula: 'Na' }, { name: '氖氣', formula: 'Ne' },
-                        { name: '硅', formula: 'Si' }, /* Removed duplicate SiO2 */ { name: '氧化鈉', formula: 'Na₂O' },
-                        { name: '氯化氫', formula: 'HCl' }, { name: '硫化鈉', formula: 'Na₂S' }, { name: '二氧化硫', formula: 'SO₂' },
-                        { name: '三氧化硫', formula: 'SO₃' }, { name: '氧化鈣', formula: 'CaO' }, { name: '氧化鎂', formula: 'MgO' },
-                        { name: '氧化銅', formula: 'CuO' }, { name: '氧化鋅', formula: 'ZnO' }, { name: '氯化鈉', formula: 'NaCl' },
-                        { name: '硝酸鎂', formula: 'Mg(NO₃)₂' }, { name: '碳酸鈉', formula: 'Na₂CO₃' }, { name: '氯化鈣', formula: 'CaCl₂' },
-                        { name: '硫酸鋁', formula: 'Al₂(SO₄)₃' }, { name: '磷酸鈉', formula: 'Na₃PO₄' }, { name: '氯化銨', formula: 'NH₄Cl' },
-                        { name: '硫酸亞鐵', formula: 'FeSO₄' }, { name: '硝酸鋁', formula: 'Al(NO₃)₃' }, { name: '二氧化錳', formula: 'MnO₂' },
-                        { name: '氧化鉛', formula: 'PbO' }, { name: '氧化銀', formula: 'Ag₂O' }, { name: '氧化汞', formula: 'HgO' },
-                        /* Removed duplicate ZnO */ { name: '氧化亞銅', formula: 'Cu₂O' }, { name: '氧化亞鐵', formula: 'FeO' },
-                        { name: '氧化鋁', formula: 'Al₂O₃' }, { name: '氯化鋁', formula: 'AlCl₃' }, { name: '氯化鐵', formula: 'FeCl₃' },
-                        { name: '氯化鋅', formula: 'ZnCl₂' }, { name: '氯化銅', formula: 'CuCl₂' }, { name: '氯化銀', formula: 'AgCl' },
-                        { name: '硫酸鈣', formula: 'CaSO₄' }, { name: '硫酸鐵', formula: 'Fe₂(SO₄)₃' }, { name: '硫酸鋅', formula: 'ZnSO₄' },
-                        { name: '硝酸鉀', formula: 'KNO₃' }, { name: '硝酸鈣', formula: 'Ca(NO₃)₂' }, { name: '硝酸鐵', formula: 'Fe(NO₃)₃' },
-                        { name: '硝酸銅', formula: 'Cu(NO₃)₂' }
-                    ];
-                    const gridSize = 4; let gameGrid = []; let selectedCells = []; let matchedCells = [];
-                    let score = 0; let startTime; let timer; let playerName = '';
-                    let leaderboard = JSON.parse(localStorage.getItem('chemistryGameLeaderboard')) || [];
-
-                    const startButton = document.getElementById('startButton');
-                    const gridElement = document.getElementById('grid');
-                    const leaderboardList = document.getElementById('leaderboardList');
-                    const clearLeaderboardButton = document.getElementById('clearLeaderboard');
-                    const messageElement = document.getElementById('message');
-                    const restartButton = document.getElementById('restartButton');
-                    const scoreElement = document.getElementById('score');
-                    const nameInputModal = document.getElementById('nameInputModal');
-                    const confirmNameButton = document.getElementById('confirmName');
-                    const playerNameInput = document.getElementById('playerName');
-                    const startScreen = document.getElementById('startScreen');
-                    const restartScreen = document.getElementById('restartScreen');
-                    const leaderboardElement = document.getElementById('leaderboard');
-
-
-                    function updateLeaderboard() {
-                        if (!leaderboardList) return;
-                        leaderboardList.innerHTML = '';
-                        leaderboard.sort((a, b) => b.score - a.score);
-                        leaderboard.slice(0, 8).forEach((entry, index) => {
-                            const li = document.createElement('li');
-                            li.className = 'text-gray-700 text-sm p-1 bg-slate-50 rounded';
-                            li.textContent = \`\${index + 1}. \${entry.name}: \${entry.score} 分\`;
-                            leaderboardList.appendChild(li);
-                        });
-                    }
-
-                    function getRandomPairs() {
-                        const shuffledPairs = [...chemicalPairs].sort(() => Math.random() - 0.5);
-                        const selectedPairs = shuffledPairs.slice(0, (gridSize * gridSize) / 2);
-                        const allItems = [];
-                        selectedPairs.forEach(pair => {
-                            allItems.push({ type: 'name', value: pair.name, pairId: pair.formula });
-                            allItems.push({ type: 'formula', value: pair.formula, pairId: pair.formula });
-                        });
-                        return allItems.sort(() => Math.random() - 0.5);
-                    }
-
-                    function createGrid() {
-                        if (!gridElement) return;
-                        gridElement.innerHTML = ''; gameGrid = [];
-                        const allItems = getRandomPairs();
-                        for (let i = 0; i < gridSize * gridSize; i++) {
-                            const cell = document.createElement('div');
-                            cell.className = 'bg-green-500 text-white flex items-center justify-center text-center font-semibold rounded-lg shadow-md cursor-pointer hover:bg-green-600 transition duration-300';
-                            cell.textContent = allItems[i].value;
-                            cell.dataset.pairId = allItems[i].pairId;
-                            cell.dataset.type = allItems[i].type;
-                            cell.addEventListener('click', () => selectCell(cell, i));
-                            gridElement.appendChild(cell);
-                            gameGrid.push(cell);
-                        }
-                    }
-
-                    function selectCell(cell, index) {
-                        if (matchedCells.includes(index) || selectedCells.length === 2 || cell.classList.contains('bg-orange-500')) return;
-                        cell.classList.remove('bg-green-500', 'hover:bg-green-600');
-                        cell.classList.add('bg-orange-500', 'hover:bg-orange-600');
-                        selectedCells.push({ cell, index, pairId: cell.dataset.pairId, type: cell.dataset.type });
-                        if (selectedCells.length === 2) checkMatch();
-                    }
-
-                    function checkMatch() {
-                        const [cell1, cell2] = selectedCells;
-                        if ((cell1.type !== cell2.type) && (cell1.pairId === cell2.pairId)) {
-                            cell1.cell.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                            cell2.cell.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                            cell1.cell.classList.add('bg-gray-400', 'text-gray-600', 'cursor-default', 'opacity-70');
-                            cell2.cell.classList.add('bg-gray-400', 'text-gray-600', 'cursor-default', 'opacity-70');
-                            matchedCells.push(cell1.index, cell2.index);
-                            const timeElapsed = (Date.now() - startTime) / 1000;
-                            const points = Math.max(100 - Math.floor(timeElapsed), 10);
-                            score += points;
-                            if (scoreElement) scoreElement.textContent = score;
-                            if (matchedCells.length === gridSize * gridSize) {
-                                clearInterval(timer);
-                                if (messageElement) messageElement.textContent = '恭喜！你贏了！';
-                                if (restartScreen) restartScreen.style.display = 'block';
-                                leaderboard.push({ name: playerName, score });
-                                localStorage.setItem('chemistryGameLeaderboard', JSON.stringify(leaderboard));
-                                updateLeaderboard();
-                            }
-                        } else {
-                            setTimeout(() => {
-                                cell1.cell.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                                cell2.cell.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                                cell1.cell.classList.add('bg-green-500', 'hover:bg-green-600');
-                                cell2.cell.classList.add('bg-green-500', 'hover:bg-green-600');
-                            }, 500);
-                        }
-                        selectedCells = [];
-                    }
-
-                    function startGame() {
-                        if (startScreen) startScreen.style.display = 'none';
-                        if (gridElement) gridElement.style.display = 'grid';
-                        if (leaderboardElement) leaderboardElement.style.display = 'block';
-                        if (restartScreen) restartScreen.style.display = 'none';
-                        if (messageElement) messageElement.textContent = '';
-                        score = 0;
-                        if (scoreElement) scoreElement.textContent = score;
-                        matchedCells = []; selectedCells = [];
-                        createGrid();
-                        startTime = Date.now();
-                        if (timer) clearInterval(timer);
-                        timer = setInterval(() => {
-                            const timeElapsed = (Date.now() - startTime) / 1000;
-                            if (messageElement) messageElement.textContent = \`時間: \${timeElapsed.toFixed(1)} 秒\`;
-                        }, 100);
-                    }
-                    
-                    if (startButton) {
-                        startButton.addEventListener('click', () => {
-                            if (nameInputModal) nameInputModal.style.display = 'flex';
-                        });
-                    }
-                    if (confirmNameButton) {
-                        confirmNameButton.addEventListener('click', () => {
-                            playerName = playerNameInput.value.trim();
-                            if (playerName) {
-                                if (nameInputModal) nameInputModal.style.display = 'none';
-                                startGame();
-                            } else {
-                                showCustomAlert('請輸入你的名稱！');
-                            }
-                        });
-                    }
-                    if (restartButton) {
-                        restartButton.addEventListener('click', () => {
-                             if (nameInputModal) nameInputModal.style.display = 'flex'; // Ask for name again or just restart
-                        });
-                    }
-                    if (clearLeaderboardButton) {
-                        clearLeaderboardButton.addEventListener('click', () => {
-                            leaderboard = [];
-                            localStorage.setItem('chemistryGameLeaderboard', JSON.stringify(leaderboard));
-                            updateLeaderboard();
-                        });
-                    }
-                    updateLeaderboard(); // Initial call
-                `;
-            }
-
-            function getIonicRadiusHTML() {
-                return `
-                    <div class="p-2 md:p-4 text-gray-800">
-                        <h2 class="text-2xl font-bold mb-4 text-center">離子半徑變化模擬</h2>
-                        <div class="control-panel bg-slate-200 p-4 rounded-lg shadow mb-4">
-                            <div class="mb-3">
-                                核電荷數: 
-                                <input type="range" id="protons" min="1" max="20" value="1" class="w-2/3 md:w-3/4 align-middle">
-                                <span class="param-value ml-2 p-1 bg-white rounded" id="protonsValue">1</span>
-                                <button class="explain-btn ml-1 md:ml-3 px-3 py-1.5 bg-sky-500 text-white rounded hover:bg-sky-600 text-sm" onclick="toggleExplanation()">具體原因</button>
-                            </div>
-                            <div class="mb-3">
-                                電子層數: 
-                                <input type="range" id="layers" min="1" max="3" value="1" class="w-2/3 md:w-3/4 align-middle">
-                                <span class="param-value ml-2 p-1 bg-white rounded" id="layersValue">1</span>
-                            </div>
-                            <div>
-                                核外電子數: 
-                                <input type="range" id="electrons" min="1" max="20" value="1" class="w-2/3 md:w-3/4 align-middle">
-                                <span class="param-value ml-2 p-1 bg-white rounded" id="electronsValue">1</span>
-                            </div>
-                        </div>
-                        <div id="containerWrapper" class="flex justify-center items-center bg-white rounded-lg shadow p-2" style="min-height: 420px;">
-                             <div id="ionicRadiusContainer" style="width: 100%; height: 400px; position: relative; border: 1px solid #ccc; margin: 0 auto;"></div>
-                        </div>
-                        <div class="explanation bg-sky-50 p-4 rounded-lg border border-sky-200 mt-4" id="explanationText" style="display: none;"></div>
-                    </div>
-                `;
-            }
-            function getIonicRadiusCSS() {
-                return `
-                    .explanation { margin: 20px auto; width: 95%; max-width: 600px; padding: 15px; background: #f0f8ff; border: 1px solid #87CEEB; border-radius: 8px; font-size: 15px; line-height: 1.6; }
-                    .nucleus span { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #000; font-weight: bold; font-size: 1.2em; pointer-events: none; text-shadow: 0 0 3px white; }
-                    #ionicRadiusContainer { width: 100%; height: 400px; position: relative; border: 1px solid #ccc; margin: 0 auto; background-color: #f8f9fa; }
-                    .control-panel div { margin: 10px 0; display: flex; align-items: center; flex-wrap: wrap; }
-                    .control-panel input[type=range] { flex-grow: 1; }
-                    .nucleus { position: absolute; border-radius: 50%; background: #FFD700; transition: all 0.3s; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-                    .electron-layer { position: absolute; border-radius: 50%; border: 2px solid #4A90E2; transition: all 0.3s; }
-                    .electron { position: absolute; width: 8px; height: 8px; background: #4A90E2; border-radius: 50%; transform: translate(-50%, -50%); transition: all 0.3s; box-shadow: 0 0 5px rgba(74,144,226,0.5); }
-                    .status { position: absolute; right: 10px; top: 10px; font-weight: bold; font-size: 1.1em; padding: 5px 10px; background-color: rgba(255,255,255,0.8); border-radius: 5px; }
-                    .param-value { display: inline-block; width: 30px; text-align: right; margin-left: 5px; }
-                `;
-            }
-            function getIonicRadiusJS() {
-                // Content from 離子半徑的變化.html
-                return `
-                    let explanationVisible = false;
-                    const explanationTextEl = document.getElementById('explanationText');
-                    
-                    window.toggleExplanation = function() { // Make it global for onclick
-                        explanationVisible = !explanationVisible;
-                        if(explanationVisible) {
-                            explanationTextEl.innerHTML = \`
-                                <h3 style="margin:0 0 10px 0; color:#2196F3; font-weight: bold;">離子半徑變化原理</h3>
-                                <p style="margin:0 0 8px 0;">當原子獲得額外電子形成<b style="color:red; font-weight:bold;">陰離子</b>時：<br>
-                                ➤ 核外電子數目增多<br>
-                                ➤ 電子間排斥力增強<br>
-                                ➤ 電子雲向外擴張<br>
-                                ➤ 離子半徑增大</p>
-                                <hr style="margin:10px 0; border-top: 1px solid #87CEEB;">
-                                <p style="margin:0;">當原子失去電子形成<b style="color:blue; font-weight:bold;">陽離子</b>時：<br>
-                                ➤ 電子數目減少<br>
-                                ➤ 電子間排斥力減弱<br>
-                                ➤ 電子雲收縮<br>
-                                ➤ 離子半徑減小</p>
-                            \`;
-                            explanationTextEl.style.display = 'block';
-                        } else {
-                            explanationTextEl.innerHTML = '';
-                            explanationTextEl.style.display = 'none';
-                        }
-                    }
-
-                    const container = document.getElementById('ionicRadiusContainer');
-                    const protonsSlider = document.getElementById('protons');
-                    const layersSlider = document.getElementById('layers');
-                    const electronsSlider = document.getElementById('electrons');
-                    const protonsValueEl = document.getElementById('protonsValue');
-                    const layersValueEl = document.getElementById('layersValue');
-                    const electronsValueEl = document.getElementById('electronsValue');
-
-                    function calculateElectronsDist(total, layerCount) {
-                        let distribution = [0, 0, 0];
-                        const maxValues = [2, 8, 8]; // K, L, M shells
-                        let remainingElectrons = total;
-                        for(let i=0; i<layerCount; i++) {
-                            if (remainingElectrons <= 0) break;
-                            const canPlace = Math.min(remainingElectrons, maxValues[i]);
-                            distribution[i] = canPlace;
-                            remainingElectrons -= canPlace;
-                        }
-                        // If there are still electrons left but no more layers specified by layerCount,
-                        // this implies an invalid state or a need for more layers.
-                        // For this simulation, we'll cap it at the specified layers.
-                        return distribution;
-                    }
-
-                    function updateDisplayValues() {
-                        if(protonsValueEl) protonsValueEl.textContent = protonsSlider.value;
-                        if(layersValueEl) layersValueEl.textContent = layersSlider.value;
-                        if(electronsValueEl) electronsValueEl.textContent = electronsSlider.value;
-                    }
-
-                    function updateAtomVisuals() {
-                        if (!container) return; // Ensure container exists
-                        container.innerHTML = ''; // Clear previous drawing
-                        updateDisplayValues();
-
-                        const p = parseInt(protonsSlider.value);
-                        const l = parseInt(layersSlider.value);
-                        const e = parseInt(electronsSlider.value);
-                        
-                        const containerWidth = container.offsetWidth;
-                        const containerHeight = container.offsetHeight;
-                        const centerX = containerWidth / 2;
-                        const centerY = containerHeight / 2;
-
-                        const nucleus = document.createElement('div');
-                        nucleus.className = 'nucleus';
-                        const nucleusBaseSize = 10; // Minimum nucleus size
-                        const nucleusSize = Math.min(nucleusBaseSize + p * 2, Math.min(containerWidth, containerHeight) * 0.2); // Responsive nucleus size
-                        nucleus.style.width = nucleus.style.height = nucleusSize + 'px';
-                        nucleus.style.left = (centerX - nucleusSize/2) + 'px';
-                        nucleus.style.top = (centerY - nucleusSize/2) + 'px';
-                        
-                        const chargeLabel = document.createElement('span');
-                        chargeLabel.textContent = p + '+';
-                        nucleus.appendChild(chargeLabel);
-                        container.appendChild(nucleus);
-
-                        const chargeDiff = e - p; // Net charge (negative for anions, positive for cations)
-                        // Radius scaling factor: anions expand, cations contract. More charge diff = more effect.
-                        // Base scaling factor. Adjust 0.05 to control sensitivity.
-                        const radiusScaleFactor = 1 - (chargeDiff * 0.05 / l); // Normalize by layers to prevent excessive scaling with few layers
-                        
-                        const electronLayersDistribution = calculateElectronsDist(e, l);
-                        
-                        let maxRadius = 0;
-
-                        for(let i=0; i<l; i++) {
-                            if (electronLayersDistribution[i] === 0 && i < l -1 && electronLayersDistribution[i+1] > 0) continue; // Skip empty inner shells if outer shells have e-
-                            if (electronLayersDistribution[i] === 0 && i === l -1 && e > 0) continue; // Skip empty outermost shell if there are electrons
-
-                            const baseLayerRadius = (nucleusSize / 2) + 30 + i * 40; // Base radius for each layer
-                            const actualLayerRadius = baseLayerRadius * radiusScaleFactor;
-                            maxRadius = Math.max(maxRadius, actualLayerRadius);
-
-                            const layerDiv = document.createElement('div');
-                            layerDiv.className = 'electron-layer';
-                            layerDiv.style.width = layerDiv.style.height = (actualLayerRadius*2) + 'px';
-                            layerDiv.style.left = (centerX - actualLayerRadius) + 'px';
-                            layerDiv.style.top = (centerY - actualLayerRadius) + 'px';
-                            container.appendChild(layerDiv);
-
-                            const electronsInThisLayer = electronLayersDistribution[i];
-                            for(let j=0; j<electronsInThisLayer; j++) {
-                                const electronDiv = document.createElement('div');
-                                electronDiv.className = 'electron';
-                                const angle = (2 * Math.PI * j) / electronsInThisLayer;
-                                const xPos = centerX + actualLayerRadius * Math.cos(angle);
-                                const yPos = centerY + actualLayerRadius * Math.sin(angle);
-                                electronDiv.style.left = xPos + 'px';
-                                electronDiv.style.top = yPos + 'px';
-                                container.appendChild(electronDiv);
-                            }
-                        }
-                        
-                        // Adjust viewbox if atom is too large (simple scaling of container elements might be complex)
-                        // This is a basic visual, so we'll cap radius display rather than implement zooming.
-                        // The radii are relative to each other.
-
-                        const statusDiv = document.createElement('div');
-                        statusDiv.className = 'status';
-                        if(e === p) {
-                            statusDiv.textContent = '原子'; statusDiv.style.color = 'green';
-                        } else if(e > p) {
-                            statusDiv.textContent = '陰離子'; statusDiv.style.color = 'red';
-                        } else {
-                            statusDiv.textContent = '陽離子'; statusDiv.style.color = 'blue';
-                        }
-                        container.appendChild(statusDiv);
-                    }
-                    
-                    // Resize observer for the container
-                    if (container) {
-                        const resizeObserver = new ResizeObserver(entries => {
-                            for (let entry of entries) {
-                                updateAtomVisuals();
-                            }
-                        });
-                        resizeObserver.observe(container);
-                    }
-
-
-                    if(protonsSlider && layersSlider && electronsSlider) {
-                        protonsSlider.oninput = layersSlider.oninput = electronsSlider.oninput = () => {
-                            updateDisplayValues();
-                            updateAtomVisuals();
-                        };
-                    }
-                    updateAtomVisuals(); // Initial draw
-                `;
-            }
-
-            function getSolutionAnimationHTML() {
-                 return `
-                    <div class="text-gray-800 p-1 md:p-4 h-full flex flex-col">
-                        <h1 class="text-2xl font-bold mb-4 text-center">硫酸稀釋過程</h1>
-                        <div class="flex flex-col lg:flex-row gap-4 items-stretch flex-grow min-h-0">
-                            <div class="lg:w-1/3 flex flex-col items-center">
-                                <div class="beaker bg-blue-100 border-2 border-gray-700 rounded-t-lg w-48 h-64 md:w-56 md:h-80 relative overflow-hidden mx-auto shadow-inner" id="beakerContainer">
-                                    </div>
-                                <div class="labels flex justify-around w-48 md:w-56 mx-auto mt-2">
-                                    <div class="label text-sm"><span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-1"></span>溶質</div>
-                                    <div class="label text-sm"><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span>溶劑</div>
-                                </div>
-                                <div class="controls grid grid-cols-2 gap-2 mt-4 w-full max-w-md">
-                                    <button class="button bg-orange-500 hover:bg-orange-600 text-white py-2 px-3 rounded-md text-sm" id="addSolute5g">加入溶質 5g</button>
-                                    <button class="button bg-orange-500 hover:bg-orange-600 text-white py-2 px-3 rounded-md text-sm" id="addSolute10g">加入溶質 10g</button>
-                                    <button class="button bg-sky-500 hover:bg-sky-600 text-white py-2 px-3 rounded-md text-sm" id="addSolvent5g">加入溶劑 5g</button>
-                                    <button class="button bg-sky-500 hover:bg-sky-600 text-white py-2 px-3 rounded-md text-sm" id="addSolvent10g">加入溶劑 10g</button>
-                                    <button class="button reset col-span-2 bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded-md text-sm" id="resetSolution">重置</button>
-                                </div>
-                            </div>
-
-                            <div class="lg:w-2/3 flex flex-col gap-4 min-h-0">
-                                <div class="particle-count bg-slate-200 p-3 rounded-lg shadow text-center" id="particleCountText">
-                                    溶質粒子：50 | 溶劑粒子：2
-                                </div>
-                                <div class="status bg-slate-200 p-3 rounded-lg shadow text-center" id="statusInfo">
-                                    當前濃度：98% | 狀態：未稀釋
-                                </div>
-                                <div class="chart-container flex-grow min-h-[150px] bg-white p-2 rounded-lg shadow">
-                                    <canvas id="concentrationChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            function getSolutionAnimationCSS() {
-                return `
-                    .beaker { border-bottom: 5px solid #333; border-radius: 0 0 20px 20px; } /* More beaker like */
-                    .particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; transition: all 0.5s ease-out; }
-                    .solute { background-color: #ff6666; /* Red */ }
-                    .solvent { background-color: #66a3ff; /* Blue */ }
-                    .chart-container { position: relative; } /* Ensure canvas resizes correctly */
-                `;
-            }
-            function getSolutionAnimationJS() {
-                // Content from 稀濃溶液動畫示意.html, adapted for new chart and structure
-                return `
-                    const beakerEl = document.getElementById('beakerContainer');
-                    const addSolute5gBtn = document.getElementById('addSolute5g');
-                    const addSolute10gBtn = document.getElementById('addSolute10g');
-                    const addSolvent5gBtn = document.getElementById('addSolvent5g');
-                    const addSolvent10gBtn = document.getElementById('addSolvent10g');
-                    const resetBtn = document.getElementById('resetSolution');
-                    const statusTextEl = document.getElementById('statusInfo');
-                    const particleCountTextEl = document.getElementById('particleCountText');
-                    const concentrationChartCtx = document.getElementById('concentrationChart')?.getContext('2d');
-
-                    let soluteCount = 50; // Initial solute particles
-                    let solventCount = 2;  // Initial solvent particles
-                    
-                    let totalMass = soluteCount + solventCount; // Assuming 1 particle = 1g for simplicity in concentration calc
-                    let operations = 0; // To track operations for chart labels
-
-                    const chartData = {
-                        labels: [], // X-axis: Operation number
-                        datasets: [{
-                            label: '溶液濃度 (%)',
-                            data: [], // Y-axis: Concentration
-                            borderColor: '#4CAF50',
-                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                            fill: true,
-                            tension: 0.1
-                        }]
-                    };
-                    let concentrationChart;
-
-                    if (concentrationChartCtx) {
-                        concentrationChart = new Chart(concentrationChartCtx, {
-                            type: 'line',
-                            data: chartData,
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                    x: { title: { display: true, text: '操作次數' } },
-                                    y: { title: { display: true, text: '溶質濃度 (%)' }, min: 0, max: 100 }
-                                },
-                                animation: { duration: 500 }
-                            }
-                        });
-                    } else {
-                        console.error("Concentration chart canvas context not found!");
-                    }
-                    
-                    function createParticlesInBeaker() {
-                        if (!beakerEl) return;
-                        beakerEl.innerHTML = ''; // Clear existing particles
-                        const beakerHeight = beakerEl.clientHeight;
-                        const beakerWidth = beakerEl.clientWidth;
-
-                        for (let i = 0; i < soluteCount; i++) {
-                            createParticle('solute', beakerWidth, beakerHeight);
-                        }
-                        for (let i = 0; i < solventCount; i++) {
-                            createParticle('solvent', beakerWidth, beakerHeight);
-                        }
-                    }
-
-                    function createParticle(type, beakerWidth, beakerHeight, isNew = false) {
-                        if (!beakerEl) return;
-                        const particle = document.createElement('div');
-                        particle.classList.add('particle', type === 'solute' ? 'solute' : 'solvent');
-                        // Position randomly within the beaker, more towards bottom initially
-                        const bottomAreaHeight = beakerHeight * 0.8; // Particles settle in lower 80%
-                        const topOffset = beakerHeight * 0.2;
-
-                        particle.style.left = \`\${Math.random() * (beakerWidth - 8)}px\`;
-                        if (isNew) { // New particles fall from top
-                            particle.style.top = '-10px'; // Start above beaker
-                            setTimeout(() => { // Animate falling
-                                particle.style.top = \`\${topOffset + Math.random() * bottomAreaHeight - 8}px\`;
-                            }, 50);
-                        } else {
-                             particle.style.top = \`\${topOffset + Math.random() * bottomAreaHeight - 8}px\`;
-                        }
-                        beakerEl.appendChild(particle);
-                    }
-
-
-                    function updateSolutionStatus() {
-                        totalMass = soluteCount + solventCount;
-                        const concentration = totalMass > 0 ? ((soluteCount / totalMass) * 100) : 0;
-                        
-                        if (statusTextEl) statusTextEl.textContent = \`當前濃度：\${concentration.toFixed(1)}% | 狀態：\${solventCount > 2 ? (soluteCount / totalMass > 0.5 ? '較濃' : '較稀') : '初始高濃度'}\`;
-                        if (particleCountTextEl) particleCountTextEl.textContent = \`溶質粒子：\${soluteCount} | 溶劑粒子：\${solventCount}\`;
-
-                        if (concentrationChart) {
-                            operations++;
-                            chartData.labels.push(operations.toString());
-                            chartData.datasets[0].data.push(concentration.toFixed(1));
-                            // Limit history to e.g. 20 points
-                            if (chartData.labels.length > 20) {
-                                chartData.labels.shift();
-                                chartData.datasets[0].data.shift();
-                            }
-                            concentrationChart.update();
-                        }
-                    }
-
-                    function addMaterial(type, amount) {
-                        const beakerWidth = beakerEl.clientWidth;
-                        const beakerHeight = beakerEl.clientHeight;
-                        for (let i = 0; i < amount; i++) {
-                            createParticle(type, beakerWidth, beakerHeight, true); // true for new particle animation
-                        }
-                        if (type === 'solute') {
-                            soluteCount += amount;
-                        } else {
-                            solventCount += amount;
-                        }
-                        updateSolutionStatus();
-                    }
-                    
-                    if (addSolute5gBtn) addSolute5gBtn.addEventListener('click', () => addMaterial('solute', 5));
-                    if (addSolute10gBtn) addSolute10gBtn.addEventListener('click', () => addMaterial('solute', 10));
-                    if (addSolvent5gBtn) addSolvent5gBtn.addEventListener('click', () => addMaterial('solvent', 5));
-                    if (addSolvent10gBtn) addSolvent10gBtn.addEventListener('click', () => addMaterial('solvent', 10));
-
-                    if (resetBtn) {
-                        resetBtn.addEventListener('click', () => {
-                            soluteCount = 50; solventCount = 2; operations = 0;
-                            if (chartData.labels) chartData.labels = [];
-                            if (chartData.datasets[0] && chartData.datasets[0].data) chartData.datasets[0].data = [];
-                            if (concentrationChart) concentrationChart.update();
-                            createParticlesInBeaker();
-                            updateSolutionStatus();
-                        });
-                    }
-                    
-                    // Initial setup
-                    createParticlesInBeaker();
-                    updateSolutionStatus();
-                     // Redraw particles if beaker resizes
-                    if (beakerEl) {
-                        new ResizeObserver(createParticlesInBeaker).observe(beakerEl);
-                    }
-                `;
-            }
-
-
-            function getAtomicRadiusHTML() {
-                return `
-                    <div class="p-2 md:p-4 text-gray-800 h-full flex flex-col">
-                        <h2 class="text-2xl font-bold mb-4 text-center">原子半徑變化趨勢</h2>
-                        <div class="controls flex flex-wrap justify-center gap-2 mb-4">
-                            <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="toggleAtomMode('group')" id="groupBtn">主族變化模式</button>
-                            <button class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 text-sm" onclick="handleAtomReason('group')" id="groupReasonBtn">原因</button>
-                            <button class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="toggleAtomMode('period')" id="periodBtn">週期變化模式</button>
-                            <button class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 text-sm" onclick="handleAtomReason('period')" id="periodReasonBtn">原因</button>
-                            </div>
-                        
-                        <div class="param-controls bg-slate-200 p-3 rounded-lg shadow mb-4">
-                            <label class="block mb-2">電子層數 (n):
-                                <select id="atomLayers" onchange="updateAtomParams()" class="ml-2 p-1.5 border border-gray-300 rounded-md w-full md:w-auto">
-                                    <option value="1">1</option> <option value="2" selected>2</option> <option value="3">3</option>
-                                    <option value="4">4</option> <option value="5">5</option>
-                                </select>
-                            </label>
-                            <label class="block">最外層電子數:
-                                <select id="atomElectrons" onchange="updateAtomParams()" class="ml-2 p-1.5 border border-gray-300 rounded-md w-full md:w-auto">
-                                    <option value="1">1</option> <option value="2">2</option> <option value="3">3</option>
-                                    <option value="4">4</option> <option value="5">5</option> <option value="6">6</option>
-                                    <option value="7">7</option> <option value="8">8</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <div class="flex-grow flex justify-center items-center bg-white rounded-lg shadow p-1" style="min-height: 350px;">
-                           <canvas id="atomCanvasEl" width="600" height="400" class="border border-gray-300 bg-gray-50 rounded-md"></canvas>
-                        </div>
-                        <div id="atomInfo" class="explanation-box bg-indigo-50 p-3 rounded-lg border border-indigo-200 mt-4 text-sm"></div>
-                        <div id="atomReason" class="reason-box bg-emerald-50 p-3 rounded-lg border border-emerald-200 mt-3 text-sm" style="display: none;"></div>
-                    </div>
-                `;
-            }
-            function getAtomicRadiusCSS() {
-                return `
-                    #atomCanvasEl { max-width: 100%; height: auto; aspect-ratio: 600 / 400; }
-                    .controls button.active-mode { filter: brightness(1.2); transform: scale(1.05); }
-                    .reason-box.period-reason { border-color: #1565c0; background: #e3f2fd; }
-                    .explanation-box, .reason-box { line-height: 1.5; }
-                `;
-            }
-            function getAtomicRadiusJS() {
-                // Content from 原子半徑變化.html
-                return `
-                    const atomCanvas = document.getElementById('atomCanvasEl');
-                    let atomCtx;
-                    if (atomCanvas) atomCtx = atomCanvas.getContext('2d'); else console.error("Atom canvas not found");
-                    
-                    let currentAtomMode = 'group';
-                    let atomAnimationId; // For potential animation
-
-                    const atomSimParams = {
-                        layers: 2,
-                        electrons: 1,
-                        baseRadius: 50, // Smaller base for better fit
-                        layerSpacing: 35, // Spacing between layers
-                        periodShrink: { base: 1.0, perElectron: 0.035 }, // Adjusted for visibility
-                        nucleus: { base: 12, layerFactor: 1.5, electronFactor: 0.3 }
-                    };
-
-                    const atomLayerColors = ['#2E86C1', '#28B463', '#8E44AD', '#CB4335', '#FF9800'];
-
-                    function calculatePeriodRadii() {
-                        const effectiveElectrons = Math.max(1, atomSimParams.electrons); // Avoid zero or negative
-                        const shrinkFactor = atomSimParams.periodShrink.base - (effectiveElectrons - 1) * atomSimParams.periodShrink.perElectron;
-                        let radii = [];
-                        for(let i=0; i < atomSimParams.layers; i++) {
-                            radii.push((atomSimParams.baseRadius + i * atomSimParams.layerSpacing) * shrinkFactor);
-                        }
-                        return radii.map(r => Math.max(5, r)); // Ensure radius is not too small
-                    }
-
-                    function calculateNucleusSize() {
-                        return atomSimParams.nucleus.base + 
-                              (atomSimParams.layers - 1) * atomSimParams.nucleus.layerFactor + 
-                              (atomSimParams.electrons - 1) * atomSimParams.nucleus.electronFactor;
-                    }
-
-                    window.handleAtomReason = function(mode) { // Global for onclick
-                        const reasonDiv = document.getElementById('atomReason');
-                        if (!reasonDiv) return;
-                        if (currentAtomMode === mode) {
-                            let reasonText = '';
-                            if (mode === 'group') {
-                                reasonText = \`<b>同主族元素（最外層電子數不變）:</b><br>
-                                            1. <b>電子層數增加：</b>每增加一個電子層，原子體積顯著增大。<br>
-                                            2. <b>遮蔽效應：</b>內層電子對外層電子的排斥部分抵消了核電荷的吸引力。<br>
-                                            3. <b>主要因素：</b>電子層數是決定半徑的主要因素。<br>
-                                            <b>結論：</b>同一主族從上到下，電子層數增多，原子半徑增大。\`;
-                                reasonDiv.className = 'reason-box bg-emerald-50 p-3 rounded-lg border border-emerald-200 mt-3 text-sm';
-                            } else {
-                                reasonText = \`<b>同週期元素（電子層數不變）:</b><br>
-                                            1. <b>核電荷數增加：</b>從左到右，原子核中的質子數增加，核電荷增強。<br>
-                                            2. <b>有效核電荷增加：</b>最外層電子受到的淨吸引力增大。<br>
-                                            3. <b>電子雲收縮：</b>原子核對外層電子的吸引力增強，導致電子雲向原子核收縮。<br>
-                                            <b>結論：</b>同一週期從左到右，核電荷數增多，原子半徑減小（稀有氣體除外）。\`;
-                                reasonDiv.className = 'reason-box period-reason bg-sky-50 p-3 rounded-lg border border-sky-200 mt-3 text-sm';
-                            }
-                            reasonDiv.innerHTML = reasonText;
-                            reasonDiv.style.display = 'block';
-                        }
-                    }
-
-                    window.toggleAtomMode = function(mode) { // Global for onclick
-                        currentAtomMode = mode;
-                        document.getElementById('groupBtn')?.classList.toggle('active-mode', mode === 'group');
-                        document.getElementById('periodBtn')?.classList.toggle('active-mode', mode === 'period');
-                        const reasonDiv = document.getElementById('atomReason');
-                        if(reasonDiv) reasonDiv.style.display = 'none';
-                        drawAtomFigure();
-                    }
-
-                    function drawAtomFigure() {
-                        if (!atomCtx || !atomCanvas) return;
-                        const centerX = atomCanvas.width / 2;
-                        const centerY = atomCanvas.height / 2;
-                        atomCtx.clearRect(0, 0, atomCanvas.width, atomCanvas.height);
-                        
-                        const nucleusRadius = Math.max(5, calculateNucleusSize());
-                        let layerRadii = [];
-                        let finalAtomRadius = 0;
-
-                        if (currentAtomMode === 'period') {
-                            layerRadii = calculatePeriodRadii();
-                        } else { // group mode
-                            for(let i=0; i < atomSimParams.layers; i++) {
-                                layerRadii.push(atomSimParams.baseRadius + i * atomSimParams.layerSpacing);
-                            }
-                        }
-                        finalAtomRadius = layerRadii.length > 0 ? layerRadii[layerRadii.length - 1] : nucleusRadius;
-                        
-                        // Scale drawing if too large for canvas
-                        const maxPossibleRadius = Math.min(centerX, centerY) - 10; // 10px padding
-                        let scaleFactor = 1;
-                        if (finalAtomRadius > maxPossibleRadius) {
-                            scaleFactor = maxPossibleRadius / finalAtomRadius;
-                        }
-                        
-                        const scaledNucleusRadius = nucleusRadius * scaleFactor;
-                        const scaledLayerRadii = layerRadii.map(r => r * scaleFactor);
-                        const scaledFinalAtomRadius = finalAtomRadius * scaleFactor;
-
-
-                        // Draw Nucleus
-                        const gradient = atomCtx.createRadialGradient(centerX, centerY, scaledNucleusRadius/3, centerX, centerY, scaledNucleusRadius);
-                        gradient.addColorStop(0, '#E74C3C'); gradient.addColorStop(1, '#C0392B');
-                        atomCtx.fillStyle = gradient; atomCtx.beginPath();
-                        atomCtx.arc(centerX, centerY, scaledNucleusRadius, 0, Math.PI * 2); atomCtx.fill();
-
-                        // Draw Electron Layers
-                        scaledLayerRadii.forEach((radius, i) => {
-                            atomCtx.strokeStyle = atomLayerColors[i % atomLayerColors.length];
-                            atomCtx.lineWidth = 1.5; atomCtx.beginPath();
-                            atomCtx.arc(centerX, centerY, radius, 0, Math.PI * 2); atomCtx.stroke();
-                            
-                            atomCtx.fillStyle = atomLayerColors[i % atomLayerColors.length];
-                            atomCtx.font = \`\${10 * scaleFactor}px Arial\`;
-                            atomCtx.fillText(\`n=\${i+1}\`, centerX + radius + (5 * scaleFactor), centerY + (5*scaleFactor) );
-                        });
-
-                        // Draw Electrons on the outermost layer shown
-                        if (scaledLayerRadii.length > 0) {
-                            const outerRadiusForElectrons = scaledLayerRadii[scaledLayerRadii.length - 1];
-                            atomCtx.fillStyle = '#1A237E'; // Dark blue for electrons
-                            const numElectronsToShow = currentAtomMode === 'period' ? atomSimParams.electrons : Math.min(atomSimParams.electrons, 8); // Cap at 8 for group visualization simplicity
-                            const angleStep = (Math.PI * 2) / numElectronsToShow;
-
-                            for (let i = 0; i < numElectronsToShow; i++) {
-                                const angle = angleStep * i;
-                                const x = centerX + Math.cos(angle) * outerRadiusForElectrons;
-                                const y = centerY + Math.sin(angle) * outerRadiusForElectrons;
-                                atomCtx.beginPath();
-                                atomCtx.arc(x, y, 4 * scaleFactor, 0, Math.PI * 2); // Electron size
-                                atomCtx.fill();
-                            }
-                        }
-                        
-                        // Draw radius line
-                        atomCtx.setLineDash([3 * scaleFactor, 3 * scaleFactor]);
-                        atomCtx.strokeStyle = '#2C3E50'; atomCtx.lineWidth = 1;
-                        atomCtx.beginPath(); atomCtx.moveTo(centerX, centerY);
-                        atomCtx.lineTo(centerX + scaledFinalAtomRadius, centerY); atomCtx.stroke();
-                        atomCtx.setLineDash([]); // Reset line dash
-
-                        updateAtomInfo(finalAtomRadius, nucleusRadius); // Report unscaled radius for consistency
-                    }
-
-                    function updateAtomInfo(atomR, nucleusR) {
-                        const infoEl = document.getElementById('atomInfo');
-                        if (!infoEl) return;
-                        let infoText = currentAtomMode === 'group' ?
-                            \`<b>同主族模式</b> (最外層電子數: \${atomSimParams.electrons})<br>
-                             電子層數 (n): \${atomSimParams.layers}<br>
-                             估算原子半徑: \${atomR.toFixed(1)} 相對單位<br>
-                             估算核半徑: \${nucleusR.toFixed(1)} 相對單位\` :
-                            \`<b>同週期模式</b> (電子層數 n: \${atomSimParams.layers})<br>
-                             最外層電子數: \${atomSimParams.electrons}<br>
-                             估算原子半徑: \${atomR.toFixed(1)} 相對單位<br>
-                             估算核半徑: \${nucleusR.toFixed(1)} 相對單位\`;
-                        infoEl.innerHTML = infoText;
-                    }
-
-                    window.updateAtomParams = function() { // Global for onchange
-                        const layersSelect = document.getElementById('atomLayers');
-                        const electronsSelect = document.getElementById('atomElectrons');
-                        if (layersSelect) atomSimParams.layers = parseInt(layersSelect.value);
-                        if (electronsSelect) atomSimParams.electrons = parseInt(electronsSelect.value);
-                        
-                        // In period mode, if layers change, electrons might need adjustment (e.g. layer 1 max 2 electrons)
-                        // For simplicity, this demo doesn't strictly enforce electron shell capacities beyond the visual.
-                        // The user controls these values to observe trends.
-                        
-                        drawAtomFigure();
-                    }
-                    
-                    // Initial setup for atom demo
-                    if (atomCanvas) { // Ensure canvas exists before trying to draw
-                         // Resize observer for the canvas parent to make canvas responsive
-                        const canvasContainer = atomCanvas.parentElement;
-                        if (canvasContainer) {
-                            const resizeObserver = new ResizeObserver(entries => {
-                                for (let entry of entries) {
-                                    const { width, height } = entry.contentRect;
-                                    // Maintain aspect ratio 1.5 (600/400)
-                                    const newCanvasWidth = Math.min(width, height * 1.5);
-                                    atomCanvas.width = newCanvasWidth - 10; // Small padding
-                                    atomCanvas.height = newCanvasWidth / 1.5;
-                                    drawAtomFigure();
-                                }
-                            });
-                            resizeObserver.observe(canvasContainer);
-                        }
-                        toggleAtomMode('group'); // Default mode
-                        updateAtomParams(); // Initial draw with default select values
-                    }
-                `;
-            }
-
-
-            showHomeScreen(); // Initialize to show home screen first
+        }
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const gameId = button.id.replace('nav-', '');
+                showGame(gameId);
+            });
         });
+
+        // Show Game 1 by default
+        showGame('game1');
+
+        // --- Game 1: 化學配對消消樂 Script ---
+        const chemicalPairsG1 = [
+            { name: '氯化鉀', formula: 'KCl' }, { name: '一氧化二氮', formula: 'N₂O' },
+            { name: '氧化鐵', formula: 'Fe₂O₃' }, { name: '二氧化碳', formula: 'CO₂' },
+            { name: '二氧化硅', formula: 'SiO₂' }, { name: '硝酸', formula: 'HNO₃' },
+            { name: '碳酸', formula: 'H₂CO₃' }, { name: '硫酸', formula: 'H₂SO₄' },
+            { name: '硫酸鉀', formula: 'K₂SO₄' }, { name: '碳酸鎂', formula: 'MgCO₃' },
+            { name: '硝酸鈉', formula: 'NaNO₃' }, { name: '碳酸鈣', formula: 'CaCO₃' },
+            { name: '一氧化二氫', formula: 'H₂O' }, { name: '四氧化三鐵', formula: 'Fe₃O₄' },
+            { name: '五氧化二氮', formula: 'N₂O₅' }, { name: '七氧化二氯', formula: 'Cl₂O₇' },
+            { name: '硫酸鈉', formula: 'Na₂SO₄' }, { name: '碳酸鋁', formula: 'Al₂(CO₃)₃' },
+            { name: '氧氣', formula: 'O₂' }, { name: '氫氣', formula: 'H₂' }, { name: '氦氣', formula: 'He' },
+            { name: '鉀', formula: 'K' }, { name: '鈉', formula: 'Na' }, { name: '氖氣', formula: 'Ne' },
+            { name: '硅', formula: 'Si' }, 
+            { name: '氧化鈉', formula: 'Na₂O' }, { name: '氯化氫', formula: 'HCl' },
+            { name: '硫化鈉', formula: 'Na₂S' }, { name: '二氧化硫', formula: 'SO₂' },
+            { name: '三氧化硫', formula: 'SO₃' }, { name: '氧化鈣', formula: 'CaO' },
+            { name: '氧化鎂', formula: 'MgO' }, { name: '氧化銅', formula: 'CuO' },
+            { name: '氯化鈉', formula: 'NaCl' }, { name: '硝酸鎂', formula: 'Mg(NO₃)₂' },
+            { name: '碳酸鈉', formula: 'Na₂CO₃' }, { name: '氯化鈣', formula: 'CaCl₂' },
+            { name: '硫酸鋁', formula: 'Al₂(SO₄)₃' }, { name: '磷酸鈉', formula: 'Na₃PO₄' },
+            { name: '氯化銨', formula: 'NH₄Cl' }, { name: '硫酸亞鐵', formula: 'FeSO₄' },
+            { name: '硝酸鋁', formula: 'Al(NO₃)₃' }, { name: '二氧化錳', formula: 'MnO₂' },
+            { name: '氧化鉛', formula: 'PbO' }, { name: '氧化銀', formula: 'Ag₂O' },
+            { name: '氧化汞', formula: 'HgO' }, { name: '氧化鋅', formula: 'ZnO' }, 
+            { name: '氧化亞銅', formula: 'Cu₂O' }, { name: '氧化亞鐵', formula: 'FeO' },
+            { name: '氧化鋁', formula: 'Al₂O₃' }, { name: '氯化鋁', formula: 'AlCl₃' },
+            { name: '氯化鐵', formula: 'FeCl₃' }, { name: '氯化鋅', formula: 'ZnCl₂' },
+            { name: '氯化銅', formula: 'CuCl₂' }, { name: '氯化銀', formula: 'AgCl' },
+            { name: '硫酸鈣', formula: 'CaSO₄' }, { name: '硫酸鐵', formula: 'Fe₂(SO₄)₃' },
+            { name: '硫酸鋅', formula: 'ZnSO₄' }, { name: '硝酸鉀', formula: 'KNO₃' },
+            { name: '硝酸鈣', formula: 'Ca(NO₃)₂' }, { name: '硝酸鐵', formula: 'Fe(NO₃)₃' },
+            { name: '硝酸銅', formula: 'Cu(NO₃)₂' }
+        ];
+        const gridSizeG1 = 4;
+        let gridArrG1 = [];
+        let selectedCellsG1 = [];
+        let matchedCellsG1 = [];
+        let scoreG1 = 0;
+        let startTimeG1;
+        let timerG1;
+        let playerNameG1 = '';
+        let leaderboardG1 = JSON.parse(localStorage.getItem('leaderboardG1')) || [];
+
+        const startScreenG1 = document.getElementById('startScreenG1');
+        const gridElementG1 = document.getElementById('gridG1');
+        const leaderboardElementG1 = document.getElementById('leaderboardG1');
+        const restartScreenG1 = document.getElementById('restartScreenG1');
+        const messageElementG1 = document.getElementById('messageG1');
+        const scoreDisplayG1 = document.getElementById('scoreG1');
+        const nameInputModalG1 = document.getElementById('nameInputModalG1');
+        const celebrationElementG1 = document.getElementById('celebrationG1');
+        const finalScoreDisplayG1 = document.getElementById('finalScoreG1');
+
+        function updateLeaderboardG1() {
+            const leaderboardList = document.getElementById('leaderboardListG1');
+            leaderboardList.innerHTML = '';
+            leaderboardG1.sort((a, b) => b.score - a.score);
+            leaderboardG1.slice(0, 8).forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.className = 'text-gray-700 text-sm md:text-lg';
+                li.textContent = `${index + 1}. ${entry.name}: ${entry.score} 分`;
+                leaderboardList.appendChild(li);
+            });
+        }
+
+        function getRandomPairsG1() {
+            const shuffledPairs = [...chemicalPairsG1].sort(() => Math.random() - 0.5);
+            const neededPairs = (gridSizeG1 * gridSizeG1) / 2;
+            const selectedPairs = shuffledPairs.slice(0, Math.min(neededPairs, shuffledPairs.length));
+            while (selectedPairs.length < neededPairs && chemicalPairsG1.length > 0) {
+                selectedPairs.push(chemicalPairsG1[Math.floor(Math.random() * chemicalPairsG1.length)]);
+            }
+
+            const allItems = [];
+            selectedPairs.forEach(pair => {
+                allItems.push({ type: 'name', value: pair.name, pairId: pair.formula });
+                allItems.push({ type: 'formula', value: pair.formula, pairId: pair.formula });
+            });
+            return allItems.sort(() => Math.random() - 0.5);
+        }
+
+        function createGridG1() {
+            gridElementG1.innerHTML = '';
+            gridArrG1 = [];
+            const allItems = getRandomPairsG1();
+            if (allItems.length < gridSizeG1 * gridSizeG1) {
+                console.error("Not enough items to fill the grid. Check chemicalPairsG1.");
+                while(allItems.length < gridSizeG1 * gridSizeG1) {
+                    allItems.push({ type: 'name', value: '錯誤', pairId: 'ERROR' });
+                }
+            }
+
+            for (let i = 0; i < gridSizeG1 * gridSizeG1; i++) {
+                const container = document.createElement('div');
+                container.className = 'cell-container';
+                
+                const cell = document.createElement('div');
+                cell.className = 'bg-green-500 text-white flex items-center justify-center text-center text-xs sm:text-sm md:text-base lg:text-xl font-semibold rounded-lg shadow-md cursor-pointer hover:bg-green-600 transition duration-300 w-full h-full p-1';
+                cell.textContent = allItems[i].value;
+                cell.dataset.pairId = allItems[i].pairId;
+                cell.dataset.type = allItems[i].type;
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => selectCellG1(cell, i));
+                
+                container.appendChild(cell);
+                gridElementG1.appendChild(container);
+                gridArrG1.push({ cell, container, index: i });
+            }
+        }
+        
+        function showScorePopupG1(cell, points) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = `+${points}`;
+            popup.style.color = 'gold';
+            const rect = cell.getBoundingClientRect();
+            popup.style.left = `${rect.left + rect.width / 2}px`;
+            popup.style.top = `${rect.top + rect.height / 2}px`;
+            popup.style.transform = 'translate(-50%, -50%)';
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 2500);
+        }
+
+        function showPenaltyPopupG1() {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = '-20';
+            popup.style.color = 'red';
+            popup.style.left = '50%';
+            popup.style.top = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 2500);
+        }
+
+        function removeCellG1(cell) {
+            const container = cell.parentElement;
+            container.classList.add('cell-removing');
+            setTimeout(() => { container.style.visibility = 'hidden'; }, 500);
+        }
+
+        function showCelebrationG1() {
+            finalScoreDisplayG1.textContent = scoreG1;
+            celebrationElementG1.style.display = 'flex';
+            setTimeout(() => {
+                celebrationElementG1.style.display = 'none';
+                restartScreenG1.style.display = 'block';
+            }, 3000);
+        }
+
+        function selectCellG1(cell, index) {
+            if (matchedCellsG1.includes(index) || selectedCellsG1.length === 2 || cell.parentElement.classList.contains('cell-removing')) return;
+            cell.classList.remove('bg-green-500', 'hover:bg-green-600');
+            cell.classList.add('bg-orange-500', 'hover:bg-orange-600');
+            selectedCellsG1.push({ cell, index, pairId: cell.dataset.pairId, type: cell.dataset.type });
+            if (selectedCellsG1.length === 2) checkMatchG1();
+        }
+
+        function checkMatchG1() {
+            const [cell1Obj, cell2Obj] = selectedCellsG1;
+            if (cell1Obj.type !== cell2Obj.type && cell1Obj.pairId === cell2Obj.pairId) {
+                const timeElapsed = (Date.now() - startTimeG1) / 1000;
+                const points = Math.max(100 - Math.floor(timeElapsed / 2), 10); 
+                scoreG1 += points;
+                scoreDisplayG1.textContent = scoreG1;
+                showScorePopupG1(cell1Obj.cell, points);
+                removeCellG1(cell1Obj.cell);
+                removeCellG1(cell2Obj.cell);
+                matchedCellsG1.push(cell1Obj.index, cell2Obj.index);
+                if (matchedCellsG1.length === gridSizeG1 * gridSizeG1) {
+                    clearInterval(timerG1);
+                    messageElementG1.textContent = '恭喜！你贏了！';
+                    leaderboardG1.push({ name: playerNameG1, score: scoreG1 });
+                    localStorage.setItem('leaderboardG1', JSON.stringify(leaderboardG1));
+                    updateLeaderboardG1();
+                    showCelebrationG1();
+                }
+            } else {
+                scoreG1 = Math.max(0, scoreG1 - 20);
+                scoreDisplayG1.textContent = scoreG1;
+                showPenaltyPopupG1();
+                cell1Obj.cell.classList.add('shake');
+                cell2Obj.cell.classList.add('shake');
+                setTimeout(() => {
+                    [cell1Obj, cell2Obj].forEach(obj => {
+                        obj.cell.classList.remove('bg-orange-500', 'hover:bg-orange-600', 'shake');
+                        obj.cell.classList.add('bg-green-500', 'hover:bg-green-600');
+                    });
+                }, 500);
+            }
+            selectedCellsG1 = [];
+        }
+
+        function startGameG1() {
+            startScreenG1.style.display = 'none';
+            gridElementG1.style.display = 'grid';
+            leaderboardElementG1.style.display = 'block';
+            restartScreenG1.style.display = 'none';
+            messageElementG1.textContent = '';
+            celebrationElementG1.style.display = 'none';
+            scoreG1 = 0;
+            scoreDisplayG1.textContent = scoreG1;
+            matchedCellsG1 = [];
+            selectedCellsG1 = [];
+            createGridG1();
+            startTimeG1 = Date.now();
+            timerG1 = setInterval(() => {
+                const timeElapsed = (Date.now() - startTimeG1) / 1000;
+                messageElementG1.textContent = `時間: ${timeElapsed.toFixed(1)} 秒`;
+            }, 100);
+        }
+        
+        document.getElementById('startButtonG1').addEventListener('click', () => {
+            nameInputModalG1.style.display = 'flex';
+        });
+        document.getElementById('confirmNameG1').addEventListener('click', () => {
+            playerNameG1 = document.getElementById('playerNameG1').value.trim();
+            if (playerNameG1) {
+                nameInputModalG1.style.display = 'none';
+                startGameG1();
+            } else {
+                const nameInput = document.getElementById('playerNameG1');
+                nameInput.classList.add('border-red-500');
+                nameInput.placeholder = "請輸入有效名稱！";
+                setTimeout(() => {
+                    nameInput.classList.remove('border-red-500');
+                    nameInput.placeholder = "你的名稱";
+                }, 2000);
+            }
+        });
+        document.getElementById('restartButtonG1').addEventListener('click', () => nameInputModalG1.style.display = 'flex');
+        document.getElementById('clearLeaderboardG1').addEventListener('click', () => {
+            if (confirm('確定要清除所有排名紀錄嗎？')) {
+                leaderboardG1 = [];
+                localStorage.removeItem('leaderboardG1'); 
+                updateLeaderboardG1();
+            }
+        });
+        updateLeaderboardG1();
+
+
+        // --- Game 2: 原子半徑大小變化 Script ---
+        let canvasG2, ctxG2, currentModeG2, paramsG2, layerColorsG2, animationIdG2;
+        let game2Initialized = false;
+
+        function initGame2() {
+            if (game2Initialized && canvasG2) { 
+                 if (animationIdG2) cancelAnimationFrame(animationIdG2);
+            }
+
+            canvasG2 = document.getElementById('atomCanvasG2');
+            if (!canvasG2) { console.error("Canvas for Game 2 not found"); return; }
+            ctxG2 = canvasG2.getContext('2d');
+            currentModeG2 = 'group'; 
+            
+            paramsG2 = {
+                layers: 2,
+                electrons: 1,
+                physics: {
+                    baseAtomRadius: 120, 
+                    layerSpacingPM: 60,
+                    shrinkPerElectronPM: 5, 
+                    nucleusBaseFM: 5,
+                    nucleusLayerFM: 1.2,
+                    nucleusElectronFM: 0.3
+                },
+                display: {
+                    pmToPixel: 0.3, 
+                    fmToPixel: 0.1, 
+                    chargeFont: 'bold 18px Arial', 
+                    layerLabelFont: '12px Arial'
+                }
+            };
+
+            layerColorsG2 = ['#3B82F6', '#10B981', '#8B5CF6', '#EF4444', '#F59E0B'];
+
+            document.getElementById('layersG2').value = paramsG2.layers;
+            document.getElementById('electronsG2').value = paramsG2.electrons;
+
+            document.getElementById('groupBtnG2').classList.add('active-mode');
+            document.getElementById('periodBtnG2').classList.remove('active-mode');
+            document.getElementById('reasonG2').style.display = 'none';
+
+            drawAtomG2();
+            game2Initialized = true;
+        }
+        
+        function calculateAtomRadiusPMG2() {
+            if (currentModeG2 === 'group') {
+                return paramsG2.physics.baseAtomRadius + (paramsG2.layers - 1) * paramsG2.physics.layerSpacingPM;
+            }
+            let baseRadiusForLayers = paramsG2.physics.baseAtomRadius + (paramsG2.layers - 1) * paramsG2.physics.layerSpacingPM;
+            return baseRadiusForLayers - (paramsG2.electrons - 1) * paramsG2.physics.shrinkPerElectronPM * (paramsG2.layers); 
+        }
+
+        function calculateNucleusRadiusFMG2() {
+            return paramsG2.physics.nucleusBaseFM + 
+                  (paramsG2.layers - 1) * paramsG2.physics.nucleusLayerFM + 
+                  (paramsG2.electrons - 1) * paramsG2.physics.nucleusElectronFM;
+        }
+
+        function toDisplayPMG2(pm) { return pm * paramsG2.display.pmToPixel; }
+        function toDisplayFMG2(fm) { return fm * paramsG2.display.fmToPixel; }
+
+        function handleReasonG2(mode) {
+            const reasonDiv = document.getElementById('reasonG2');
+            if (currentModeG2 === mode) {
+                let reasonText = '';
+                if (mode === 'group') {
+                    reasonText = `<b>同主族（最外層電子數不變，電子層數增加）：</b><br>
+                                1. <b>電子層數增加：</b>每增加一個電子層，原子體積顯著增大。<br>
+                                2. <b>遮蔽效應：</b>內層電子對外層電子的排斥部分抵消了核電荷的吸引力。<br>
+                                3. <b>主要因素：</b>電子層數的增加是主導因素，導致原子半徑增大。<br>
+                                因此，在同一主族中，從上到下，原子半徑依次增大。`;
+                    reasonDiv.className = 'reason-box p-4 rounded-md'; 
+                } else { 
+                    reasonText = `<b>同週期（電子層數不變，核電荷數及最外層電子數增加）：</b><br>
+                                1. <b>核電荷數增加：</b>原子核中的質子數增加，對核外電子的吸引力增強。<br>
+                                2. <b>最外層電子數增加：</b>雖然電子間有排斥，但核電荷增加的吸引效應更強。<br>
+                                3. <b>主要因素：</b>核電荷的有效吸引力增加是主導因素，使電子雲向原子核收縮，導致原子半徑減小。<br>
+                                因此，在同一週期中，從左到右（除稀有氣體外），原子半徑依次減小。`;
+                    reasonDiv.className = 'reason-box period-reason p-4 rounded-md'; 
+                }
+                reasonDiv.innerHTML = reasonText;
+                reasonDiv.style.display = reasonDiv.style.display === 'block' ? 'none' : 'block'; 
+            } else {
+                 reasonDiv.style.display = 'none'; 
+            }
+        }
+
+        function toggleModeG2(mode) {
+            currentModeG2 = mode;
+            document.getElementById('groupBtnG2').classList.toggle('active-mode', mode === 'group');
+            document.getElementById('periodBtnG2').classList.toggle('active-mode', mode === 'period');
+            document.getElementById('reasonG2').style.display = 'none'; 
+            
+            if (mode === 'group') { 
+                document.getElementById('electronsG2').value = 1; 
+            } else { 
+                 document.getElementById('layersG2').value = Math.min(parseInt(document.getElementById('layersG2').value), 3); 
+            }
+            updateParamsG2(); 
+        }
+        
+        function drawAtomG2() {
+            if (!ctxG2) return;
+            const centerX = canvasG2.width / 2;
+            const centerY = canvasG2.height / 2;
+            ctxG2.clearRect(0, 0, canvasG2.width, canvasG2.height);
+            
+            const atomRadiusPM = calculateAtomRadiusPMG2();
+            const nucleusRadiusFM = calculateNucleusRadiusFMG2();
+            
+            const displayAtomRadius = Math.max(toDisplayPMG2(atomRadiusPM), 20); 
+            const displayNucleus = Math.max(toDisplayFMG2(nucleusRadiusFM), 5); 
+
+            const gradient = ctxG2.createRadialGradient(centerX, centerY, displayNucleus / 3, centerX, centerY, displayNucleus);
+            gradient.addColorStop(0, '#FCA5A5'); 
+            gradient.addColorStop(1, '#DC2626'); 
+            ctxG2.fillStyle = gradient;
+            ctxG2.beginPath();
+            ctxG2.arc(centerX, centerY, displayNucleus, 0, Math.PI * 2);
+            ctxG2.fill();
+            ctxG2.fillStyle = 'white';
+            ctxG2.font = paramsG2.display.chargeFont;
+            ctxG2.textAlign = 'center';
+            ctxG2.textBaseline = 'middle';
+            ctxG2.fillText('+', centerX, centerY);
+
+            let currentLayerRadius = 0;
+            for (let i = 0; i < paramsG2.layers; i++) {
+                if (currentModeG2 === 'group') {
+                     currentLayerRadius = toDisplayPMG2(paramsG2.physics.baseAtomRadius / paramsG2.layers * (i + 1) + (i * paramsG2.physics.layerSpacingPM / 2));
+                } else { 
+                    currentLayerRadius = toDisplayPMG2( (paramsG2.physics.baseAtomRadius + i * paramsG2.physics.layerSpacingPM) * (1 - (paramsG2.electrons -1) * paramsG2.physics.shrinkPerElectronPM / (paramsG2.physics.baseAtomRadius * 2) ));
+                }
+                currentLayerRadius = Math.max(currentLayerRadius, displayNucleus + 10 * (i + 1)); 
+
+                ctxG2.strokeStyle = layerColorsG2[i % layerColorsG2.length];
+                ctxG2.lineWidth = 2;
+                ctxG2.beginPath();
+                ctxG2.arc(centerX, centerY, currentLayerRadius, 0, Math.PI * 2);
+                ctxG2.stroke();
+                
+                ctxG2.fillStyle = layerColorsG2[i % layerColorsG2.length];
+                ctxG2.font = paramsG2.display.layerLabelFont;
+                ctxG2.fillText(`n=${i+1}`, centerX + currentLayerRadius + 10, centerY - 10);
+
+                if (i === paramsG2.layers - 1) {
+                    ctxG2.fillStyle = '#FBBF24'; 
+                    const angleStep = (Math.PI * 2) / paramsG2.electrons;
+                    for (let j = 0; j < paramsG2.electrons; j++) {
+                        const angle = angleStep * j;
+                        const x = centerX + Math.cos(angle) * currentLayerRadius;
+                        const y = centerY + Math.sin(angle) * currentLayerRadius;
+                        ctxG2.beginPath();
+                        ctxG2.arc(x, y, 6, 0, Math.PI * 2); 
+                        ctxG2.fill();
+                        
+                        ctxG2.fillStyle = '#4B5563'; 
+                        ctxG2.font = paramsG2.display.chargeFont;
+                        ctxG2.fillText('-', x, y); 
+                    }
+                }
+            }
+            updateInfoG2(atomRadiusPM, nucleusRadiusFM);
+        }
+
+        function updateInfoG2(atomRadiusPM, nucleusRadiusFM) {
+            let infoText = currentModeG2 === 'group' ?
+                `<b>同主族元素</b> (最外層電子數: ${paramsG2.electrons})<br>
+                 電子層數 (n): ${paramsG2.layers}<br>` :
+                `<b>同週期元素</b> (電子層數 n: ${paramsG2.layers})<br>
+                 最外層電子數: ${paramsG2.electrons}<br>`;
+            infoText += `估算原子半徑: ${atomRadiusPM.toFixed(1)} pm<br>
+                         估算原子核半徑: ${nucleusRadiusFM.toFixed(1)} fm`;
+            document.getElementById('infoG2').innerHTML = infoText;
+        }
+
+        function updateParamsG2() {
+            paramsG2.layers = parseInt(document.getElementById('layersG2').value);
+            paramsG2.electrons = parseInt(document.getElementById('electronsG2').value);
+            drawAtomG2();
+        }
+        
+        // --- Game 3: 元素週期表配對 Script ---
+        const periodicTableData = [
+            // Row 1
+            { atomicNumber: 1, symbol: 'H', name_zh: '氫', row: 1, col: 1, fact_zh: '氫是宇宙中最輕、含量最豐富的元素，是恆星的主要燃料。' },
+            { atomicNumber: 2, symbol: 'He', name_zh: '氦', row: 1, col: 18, fact_zh: '氦氣非常輕且不可燃，常用於填充氣球和飛艇。' },
+            // Row 2
+            { atomicNumber: 3, symbol: 'Li', name_zh: '鋰', row: 2, col: 1, fact_zh: '鋰是最輕的金屬，廣泛應用於充電電池中。' },
+            { atomicNumber: 4, symbol: 'Be', name_zh: '鈹', row: 2, col: 2, fact_zh: '鈹合金堅硬且輕，用於航空航天工業。' },
+            { atomicNumber: 5, symbol: 'B', name_zh: '硼', row: 2, col: 13, fact_zh: '硼用於製造玻璃纖維和清潔劑，也是植物必需的微量元素。' },
+            { atomicNumber: 6, symbol: 'C', name_zh: '碳', row: 2, col: 14, fact_zh: '碳是所有生命的基礎，能形成多種化合物，如鑽石和石墨。' },
+            { atomicNumber: 7, symbol: 'N', name_zh: '氮', row: 2, col: 15, fact_zh: '氮氣佔地球大氣約78%，是蛋白質和DNA的重要組成部分。' },
+            { atomicNumber: 8, symbol: 'O', name_zh: '氧', row: 2, col: 16, fact_zh: '氧氣對大多數生命至關重要，支持呼吸和燃燒。' },
+            { atomicNumber: 9, symbol: 'F', name_zh: '氟', row: 2, col: 17, fact_zh: '氟是最具反應性的元素，用於牙膏中以防止蛀牙。' },
+            { atomicNumber: 10, symbol: 'Ne', name_zh: '氖', row: 2, col: 18, fact_zh: '氖氣在通電時發出紅橙色光芒，用於霓虹燈。' },
+            // Row 3
+            { atomicNumber: 11, symbol: 'Na', name_zh: '鈉', row: 3, col: 1, fact_zh: '鈉是食鹽的主要成分之一，對神經功能和體液平衡很重要。' },
+            { atomicNumber: 12, symbol: 'Mg', name_zh: '鎂', row: 3, col: 2, fact_zh: '鎂是葉綠素的關鍵成分，也用於輕質合金。' },
+            { atomicNumber: 13, symbol: 'Al', name_zh: '鋁', row: 3, col: 13, fact_zh: '鋁輕巧、耐腐蝕，廣泛用於飛機、汽車和包裝材料。' },
+            { atomicNumber: 14, symbol: 'Si', name_zh: '矽', row: 3, col: 14, fact_zh: '矽是沙子和玻璃的主要成分，也是半導體工業的基礎。' },
+            { atomicNumber: 15, symbol: 'P', name_zh: '磷', row: 3, col: 15, fact_zh: '磷是骨骼、牙齒和DNA的必需元素，也用於火柴和肥料。' },
+            { atomicNumber: 16, symbol: 'S', name_zh: '硫', row: 3, col: 16, fact_zh: '硫存在於某些氨基酸中，用於製造硫酸和火藥。' },
+            { atomicNumber: 17, symbol: 'Cl', name_zh: '氯', row: 3, col: 17, fact_zh: '氯常用於消毒飲用水和游泳池，也是食鹽的成分。' },
+            { atomicNumber: 18, symbol: 'Ar', name_zh: '氬', row: 3, col: 18, fact_zh: '氬氣是一種惰性氣體，用於燈泡和焊接。' },
+            // Row 4
+            { atomicNumber: 19, symbol: 'K', name_zh: '鉀', row: 4, col: 1, fact_zh: '鉀對細胞功能至關重要，存在於香蕉等食物中。' },
+            { atomicNumber: 20, symbol: 'Ca', name_zh: '鈣', row: 4, col: 2, fact_zh: '鈣是骨骼和牙齒的主要成分，也參與肌肉收縮。' },
+            { atomicNumber: 21, symbol: 'Sc', name_zh: '鈧', row: 4, col: 3, fact_zh: '鈧用於製造高性能合金和某些類型的照明設備。' },
+            { atomicNumber: 22, symbol: 'Ti', name_zh: '鈦', row: 4, col: 4, fact_zh: '鈦堅固、輕巧且耐腐蝕，用於飛機、人造關節和顏料。' },
+            { atomicNumber: 23, symbol: 'V', name_zh: '釩', row: 4, col: 5, fact_zh: '釩用於製造堅固的鋼合金，如工具鋼。' },
+            { atomicNumber: 24, symbol: 'Cr', name_zh: '鉻', row: 4, col: 6, fact_zh: '鉻用於不銹鋼和鍍鉻，使金屬表面光亮耐腐蝕。' },
+            { atomicNumber: 25, symbol: 'Mn', name_zh: '錳', row: 4, col: 7, fact_zh: '錳是製造鋼鐵的重要元素，也參與生物體內的酶反應。' },
+            { atomicNumber: 26, symbol: 'Fe', name_zh: '鐵', row: 4, col: 8, fact_zh: '鐵是地殼中含量豐富的金屬，是血紅蛋白的關鍵成分，用於運輸氧氣。' },
+            { atomicNumber: 27, symbol: 'Co', name_zh: '鈷', row: 4, col: 9, fact_zh: '鈷用於製造強力磁鐵和藍色顏料，也是維生素B12的成分。' },
+            { atomicNumber: 28, symbol: 'Ni', name_zh: '鎳', row: 4, col: 10, fact_zh: '鎳耐腐蝕，用於製造不銹鋼、硬幣和電池。' },
+            { atomicNumber: 29, symbol: 'Cu', name_zh: '銅', row: 4, col: 11, fact_zh: '銅具有優良的導電性和導熱性，廣泛用於電線和管道。' },
+            { atomicNumber: 30, symbol: 'Zn', name_zh: '鋅', row: 4, col: 12, fact_zh: '鋅用於鍍鋅以防止鐵生鏽，也是人體必需的微量元素。' }
+        ];
+
+        const gameGridG3 = document.getElementById('periodic-table-game-grid');
+        const currentElementDisplayG3 = document.getElementById('current-element-display');
+        const diceButtonG3 = document.getElementById('dice-button');
+        const factTextG3 = document.getElementById('fact-text');
+        const game3MessageG3 = document.getElementById('game3-message');
+        const game3WinMessageG3 = document.getElementById('game3-win-message');
+        const restartGame3ButtonG3 = document.getElementById('restart-game3-button');
+        const game3ContainerG3 = document.getElementById('game3-container');
+
+
+        let unplacedElementsG3 = [];
+        let currentElementToPlaceG3 = null;
+        let placedCountG3 = 0;
+        let game3Initialized = false;
+
+        function setupPeriodicTableG3() {
+            gameGridG3.innerHTML = ''; 
+            for (let r = 1; r <= 4; r++) { 
+                for (let c = 1; c <= 18; c++) { 
+                    const cell = document.createElement('div');
+                    cell.classList.add('pt-cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    const element = periodicTableData.find(el => el.row === r && el.col === c);
+                    if (element) {
+                        cell.classList.add('empty-interactive');
+                        cell.dataset.atomicNumber = element.atomicNumber;
+                        cell.addEventListener('click', handleCellClickG3);
+                    } else {
+                        cell.classList.add('opacity-50', 'bg-gray-300'); 
+                    }
+                    gameGridG3.appendChild(cell);
+                }
+            }
+        }
+        
+        function rollDiceG3() {
+            if (unplacedElementsG3.length === 0) {
+                currentElementDisplayG3.textContent = "全部完成！";
+                diceButtonG3.disabled = true;
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * unplacedElementsG3.length);
+            currentElementToPlaceG3 = unplacedElementsG3[randomIndex];
+            currentElementDisplayG3.textContent = `${currentElementToPlaceG3.symbol} (${currentElementToPlaceG3.name_zh})`;
+            game3MessageG3.textContent = ''; 
+            diceButtonG3.disabled = true; 
+        }
+
+        function handleCellClickG3(event) {
+            if (!currentElementToPlaceG3) {
+                game3MessageG3.textContent = "請先擲骰子選擇一個元素！";
+                return;
+            }
+
+            const clickedCell = event.currentTarget;
+            if (clickedCell.classList.contains('filled')) {
+                game3MessageG3.textContent = "這個位置已經填好了！";
+                return;
+            }
+
+            const clickedAtomicNumber = parseInt(clickedCell.dataset.atomicNumber);
+
+            if (clickedAtomicNumber === currentElementToPlaceG3.atomicNumber) {
+                clickedCell.innerHTML = `
+                    <span class="atomic-number">${currentElementToPlaceG3.atomicNumber}</span>
+                    <span class="symbol">${currentElementToPlaceG3.symbol}</span>
+                    <span class="name">${currentElementToPlaceG3.name_zh}</span>
+                `;
+                clickedCell.classList.remove('empty-interactive');
+                clickedCell.classList.add('filled');
+                clickedCell.style.backgroundColor = getColorForGroupG3(currentElementToPlaceG3.col); 
+                
+                factTextG3.textContent = currentElementToPlaceG3.fact_zh;
+                game3MessageG3.textContent = `正確！ ${currentElementToPlaceG3.name_zh} 放置成功！`;
+                game3MessageG3.classList.remove('text-red-600');
+                game3MessageG3.classList.add('text-green-600');
+
+
+                unplacedElementsG3 = unplacedElementsG3.filter(el => el.atomicNumber !== currentElementToPlaceG3.atomicNumber);
+                placedCountG3++;
+                currentElementToPlaceG3 = null;
+                currentElementDisplayG3.textContent = "-";
+                diceButtonG3.disabled = false; 
+
+                if (placedCountG3 === periodicTableData.length) {
+                    game3WinMessageG3.style.display = 'block';
+                    diceButtonG3.disabled = true;
+                    currentElementDisplayG3.textContent = "遊戲勝利！";
+                }
+            } else {
+                game3MessageG3.textContent = "錯誤的位置！請再試一次。";
+                game3MessageG3.classList.remove('text-green-600');
+                game3MessageG3.classList.add('text-red-600');
+                
+                const gameContentArea = game3ContainerG3.querySelector('.flex.flex-col.items-center');
+                if (gameContentArea) {
+                    gameContentArea.classList.add('game-board-flash-red');
+                    setTimeout(() => {
+                        gameContentArea.classList.remove('game-board-flash-red');
+                    }, 500);
+                }
+            }
+        }
+        
+        function getColorForGroupG3(column) {
+            if (column === 1) return '#FCA5A5'; 
+            if (column === 2) return '#FDBA74'; 
+            if (column >= 3 && column <= 12) return '#FDE047'; 
+            if (column === 13) return '#A7F3D0'; 
+            if (column === 14) return '#93C5FD'; 
+            if (column === 15) return '#A5B4FC'; 
+            if (column === 16) return '#D8B4FE'; 
+            if (column === 17) return '#F9A8D4'; 
+            if (column === 18) return '#C4B5FD'; 
+            return '#E5E7EB'; 
+        }
+
+        function resetGame3() {
+            unplacedElementsG3 = [...periodicTableData];
+            currentElementToPlaceG3 = null;
+            placedCountG3 = 0;
+            setupPeriodicTableG3();
+            currentElementDisplayG3.textContent = "-";
+            factTextG3.textContent = "-";
+            game3MessageG3.textContent = "";
+            diceButtonG3.disabled = false;
+            game3WinMessageG3.style.display = 'none';
+        }
+
+        function initGame3() {
+            // Ensure IDs in G3 script match HTML
+            // e.g. gameGridG3, currentElementDisplayG3 etc.
+            resetGame3();
+            diceButtonG3.addEventListener('click', rollDiceG3);
+            restartGame3ButtonG3.addEventListener('click', resetGame3);
+            game3Initialized = true;
+        }
+        
     </script>
 </body>
 </html>
+
+
